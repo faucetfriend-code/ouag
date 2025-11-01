@@ -218,10 +218,10 @@ export default async function TokenSummaryPage({ params }: TokenSummaryPageProps
         <div className="col-12">
           <div className="card glow-orange">
             <div className="card-body">
-              <h5 className="card-title text-center mb-3">
-                <i className="bi bi-graph-up me-2"></i>
-                 <span className="token-name">{tokenUpper}</span> Market Sentiment Analysis
-              </h5>
+               <h5 className="card-title text-center mb-3">
+                 <i className="bi bi-graph-up me-2"></i>
+                  <span className="token-name">{tokenUpper}</span> <span className="token-name">Market Sentiment Analysis</span>
+               </h5>
 
               {/* Data source info */}
               <div className="text-center mb-3">
