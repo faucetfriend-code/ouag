@@ -141,7 +141,7 @@ export default async function TokenSummaryPage({ params }: TokenSummaryPageProps
     switch (sentiment) {
       case 'bullish': return 'text-warning';  // Yellow for bullish
       case 'bearish': return 'text-danger';   // Red for bearish
-      default: return 'text-muted';           // Gray for neutral
+      default: return 'text-secondary';           // Secondary for neutral
     }
   };
 
@@ -189,7 +189,7 @@ export default async function TokenSummaryPage({ params }: TokenSummaryPageProps
 
           {/* Page title and description */}
           <h1 className="mb-2"><span className="token-name">{tokenUpper}</span> Analyst Summary</h1>
-          <p className="text-muted mb-3">What each analyst has said most about {tokenUpper}</p>
+          <p className="text-secondary mb-3">What each analyst has said most about {tokenUpper}</p>
 
           {/* OVERALL SENTIMENT INDICATOR: Big visual showing market consensus */}
           <div className="d-flex justify-content-center mb-3">
@@ -209,7 +209,7 @@ export default async function TokenSummaryPage({ params }: TokenSummaryPageProps
         {/* Analyst count metric */}
         <div className="text-end">
           <div className="h4 mb-0">{Object.keys(analystSummaries).length}</div>
-          <small className="text-muted">Active Analysts</small>
+          <small className="text-secondary">Active Analysts</small>
         </div>
       </div>
 
@@ -224,8 +224,8 @@ export default async function TokenSummaryPage({ params }: TokenSummaryPageProps
                </h5>
 
               {/* Data source info */}
-              <div className="text-center mb-3">
-                <small className="text-muted">
+               <div className="text-center mb-3">
+                 <small className="text-secondary">
                   Based on {tokenPosts.length} analyst posts from {Object.keys(analystSummaries).length} experts
                 </small>
               </div>
@@ -235,19 +235,19 @@ export default async function TokenSummaryPage({ params }: TokenSummaryPageProps
                 <div className="col-md-4">
                   <div className="p-3 bg-light rounded">
                     <div className={`h4 mb-1 ${getSentimentColor('bullish')}`}>{totalBullish}</div>
-                    <small className="text-muted">Bullish Signals</small>
+                          <small className="text-secondary">Bullish Signals</small>
                   </div>
                 </div>
                 <div className="col-md-4">
                   <div className="p-3 bg-light rounded">
                     <div className={`h4 mb-1 ${getSentimentColor('bearish')}`}>{totalBearish}</div>
-                    <small className="text-muted">Bearish Signals</small>
+                          <small className="text-secondary">Bearish Signals</small>
                   </div>
                 </div>
                 <div className="col-md-4">
                   <div className="p-3 bg-light rounded">
                     <div className={`h4 mb-1 ${getSentimentColor('neutral')}`}>{totalNeutral}</div>
-                    <small className="text-muted">Neutral Signals</small>
+                          <small className="text-secondary">Neutral Signals</small>
                   </div>
                 </div>
               </div>
@@ -263,7 +263,7 @@ export default async function TokenSummaryPage({ params }: TokenSummaryPageProps
                         <span className={`badge ${getSentimentBadge(sentiment)} mb-2`}>
                           {sentiment.toUpperCase()}
                         </span>
-                        <div className="small text-muted">
+                         <div className="small text-secondary">
                           {data.bullishCount} Bullish • {data.bearishCount} Bearish • {data.neutralCount} Neutral
                         </div>
                       </div>
@@ -293,7 +293,7 @@ export default async function TokenSummaryPage({ params }: TokenSummaryPageProps
                      <span className={`badge ${getSentimentBadge(sentiment)}`}>
                        {sentiment.toUpperCase()}
                      </span>
-                     <small className="text-muted">
+                        <small className="text-secondary">
                        {data.totalPosts} post{data.totalPosts !== 1 ? 's' : ''}
                      </small>
                    </div>
@@ -306,7 +306,7 @@ export default async function TokenSummaryPage({ params }: TokenSummaryPageProps
                          <div className={`h4 mb-1 ${getSentimentColor('bullish')}`}>
                            {data.bullishCount}
                          </div>
-                         <small className="text-muted">Bullish Signals</small>
+                         <small className="text-secondary">Bullish Signals</small>
                        </div>
                      </div>
                      <div className="col-md-4">
@@ -314,7 +314,7 @@ export default async function TokenSummaryPage({ params }: TokenSummaryPageProps
                          <div className={`h4 mb-1 ${getSentimentColor('bearish')}`}>
                            {data.bearishCount}
                          </div>
-                         <small className="text-muted">Bearish Signals</small>
+                         <small className="text-secondary">Bearish Signals</small>
                        </div>
                      </div>
                      <div className="col-md-4">
@@ -322,7 +322,7 @@ export default async function TokenSummaryPage({ params }: TokenSummaryPageProps
                          <div className={`h4 mb-1 ${getSentimentColor('neutral')}`}>
                            {data.neutralCount}
                          </div>
-                         <small className="text-muted">Neutral Signals</small>
+                         <small className="text-secondary">Neutral Signals</small>
                        </div>
                      </div>
                    </div>
@@ -349,7 +349,7 @@ export default async function TokenSummaryPage({ params }: TokenSummaryPageProps
                    {/* ACTIVITY SUMMARY: Recent posting activity and navigation */}
                    <div className="border-top pt-3">
                      <div className="d-flex justify-content-between align-items-center">
-                       <small className="text-muted">
+                       <small className="text-secondary">
                          Latest post: {data.latestPost.toLocaleDateString()}
                        </small>
                        <Link

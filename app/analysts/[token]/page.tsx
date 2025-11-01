@@ -98,7 +98,7 @@ export default async function TokenAnalysisPage({ params }: TokenPageProps) {
             </Link>
           </div>
           <h1 className="mb-2"><span className="token-name">{tokenUpper}</span> Analysis</h1>
-          <p className="text-muted mb-0">Comprehensive analyst insights and technical analysis</p>
+          <p className="text-secondary mb-0">Comprehensive analyst insights and technical analysis</p>
         </div>
         <div className="text-end">
           <div className="h4 mb-0">{formatPrice(priceData.price)}</div>
@@ -117,13 +117,13 @@ export default async function TokenAnalysisPage({ params }: TokenPageProps) {
                <div className="row">
                  <div className="col-md-4">
                    <div className="text-center p-3 bg-light rounded">
-                     <h6 className="text-muted mb-1">Current Price</h6>
+                      <h6 className="text-secondary mb-1">Current Price</h6>
                      <div className={`h5 mb-0 ${getPriceClass(priceData.change24h)}`}>{formatPrice(priceData.price)}</div>
                    </div>
                  </div>
                 <div className="col-md-4">
                   <div className="text-center p-3 bg-light rounded">
-                    <h6 className="text-muted mb-1">1 Hour Change</h6>
+                     <h6 className="text-secondary mb-1">1 Hour Change</h6>
                     <div className={`h5 mb-0 ${getPriceClass(priceData.change1h)}`}>
                       {formatChange(priceData.change1h)}
                     </div>
@@ -131,7 +131,7 @@ export default async function TokenAnalysisPage({ params }: TokenPageProps) {
                 </div>
                 <div className="col-md-4">
                   <div className="text-center p-3 bg-light rounded">
-                    <h6 className="text-muted mb-1">24 Hour Change</h6>
+                     <h6 className="text-secondary mb-1">24 Hour Change</h6>
                     <div className={`h5 mb-0 ${getPriceClass(priceData.change24h)}`}>
                       {formatChange(priceData.change24h)}
                     </div>
@@ -146,16 +146,16 @@ export default async function TokenAnalysisPage({ params }: TokenPageProps) {
                <div className="card-body">
                <h6 className="card-title" style={{ color: 'white' }}>Analysis Summary</h6>
               <div className="mb-2">
-                <small className="text-muted">Total Posts:</small>
+                 <small className="text-secondary">Total Posts:</small>
                 <span className="float-end fw-bold">{tokenPosts.length}</span>
               </div>
               <div className="mb-2">
-                <small className="text-muted">Active Analysts:</small>
+                 <small className="text-secondary">Active Analysts:</small>
                 <span className="float-end fw-bold">{Object.keys(postsByAnalyst).length}</span>
               </div>
               <div className="mb-0">
-                <small className="text-muted">Latest Update:</small>
-                <div className="small text-muted">
+                 <small className="text-secondary">Latest Update:</small>
+                 <div className="small text-secondary">
                   {tokenPosts.length > 0 ?
                     new Date(Math.max(...tokenPosts.map(p => p.timestamp.getTime()))).toLocaleDateString() :
                     'No data'
@@ -176,7 +176,7 @@ export default async function TokenAnalysisPage({ params }: TokenPageProps) {
                 <h5 className="mb-0">
                   <i className="bi bi-person-circle me-2"></i>
                   {analyst}
-                  <small className="text-muted ms-2">({posts.length} post{posts.length !== 1 ? 's' : ''})</small>
+                   <small className="text-secondary ms-2">({posts.length} post{posts.length !== 1 ? 's' : ''})</small>
                 </h5>
               </div>
               <div className="card-body">
@@ -185,8 +185,8 @@ export default async function TokenAnalysisPage({ params }: TokenPageProps) {
                     <div key={post.id} className="col-md-6 mb-3">
                       <div className="border rounded p-3">
                         <div className="d-flex justify-content-between align-items-start mb-2">
-                          <small className="text-muted">#{post.channel}</small>
-                          <small className="text-muted">
+                           <small className="text-secondary">#{post.channel}</small>
+                           <small className="text-secondary">
                             {post.timestamp.toLocaleDateString()} {post.timestamp.toLocaleTimeString()}
                           </small>
                         </div>

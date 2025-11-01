@@ -15,7 +15,7 @@ export default function Footer() {
           {/* BRAND SECTION: Company info and tagline */}
           <div className="col-md-4 mb-3">
             <h6 className="fw-bold text-primary">Unity Oracle Aggregator</h6>
-            <p className="small text-muted mb-0">
+            <p className="small text-secondary mb-0">
               Your comprehensive crypto trading intelligence platform
             </p>
           </div>
@@ -46,7 +46,7 @@ export default function Footer() {
           {/* PLATFORM STATISTICS: Key metrics overview */}
           <div className="col-md-4 mb-3">
             <h6 className="fw-bold">Market Overview</h6>
-            <div className="small text-muted">
+            <div className="small text-secondary">
               <div className="d-flex justify-content-between mb-1">
                 <span>Tokens Tracked:</span>
                 <span className="fw-bold">10</span>
@@ -65,7 +65,7 @@ export default function Footer() {
 
         {/* COPYRIGHT NOTICE */}
         <hr className="my-3" />
-        <div className="text-center small text-muted">
+        <div className="text-center small text-secondary">
           <p className="mb-0">
             © 2024 Unity Oracle Aggregator. Built for crypto traders, by crypto traders.
           </p>

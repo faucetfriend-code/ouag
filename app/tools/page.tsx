@@ -99,7 +99,7 @@ export default function ToolsPage() {
 
       <div className="mb-4">
         <h1 className="mb-2">Trading Tools</h1>
-        <p className="text-muted mb-0">Essential tools for informed cryptocurrency trading decisions</p>
+        <p className="text-secondary mb-0">Essential tools for informed cryptocurrency trading decisions</p>
       </div>
 
       <div className="row g-4">
@@ -111,7 +111,7 @@ export default function ToolsPage() {
                   <i className={`bi ${tool.icon} display-4`}></i>
                 </div>
                 <h5 className="card-title">{tool.title}</h5>
-                <p className="card-text text-muted small">
+                 <p className="card-text text-secondary small">
                   {tool.description}
                 </p>
                 <div className="mt-3">
@@ -145,25 +145,25 @@ export default function ToolsPage() {
                 <div className="col-md-3">
                   <div className="p-3">
                     <h4 className="text-success mb-1">$1.2T</h4>
-                    <small className="text-muted">Total Market Cap</small>
+                     <small className="text-secondary">Total Market Cap</small>
                   </div>
                 </div>
                 <div className="col-md-3">
                   <div className="p-3">
                     <h4 className="text-primary mb-1">$45B</h4>
-                    <small className="text-muted">24h Volume</small>
+                     <small className="text-secondary">24h Volume</small>
                   </div>
                 </div>
                 <div className="col-md-3">
                   <div className="p-3">
                     <h4 className="text-info mb-1">BTC 52%</h4>
-                    <small className="text-muted">BTC Dominance</small>
+                     <small className="text-secondary">BTC Dominance</small>
                   </div>
                 </div>
                 <div className="col-md-3">
                   <div className="p-3">
                     <h4 className="text-warning mb-1">1,847</h4>
-                    <small className="text-muted">Active Cryptos</small>
+                     <small className="text-secondary">Active Cryptos</small>
                   </div>
                 </div>
               </div>
@@ -177,7 +177,7 @@ export default function ToolsPage() {
         <div className="col-12">
           <div className="card">
             <div className="card-body">
-              <h6 className="card-title text-muted mb-3">Quick Actions</h6>
+              <h6 className="card-title text-secondary mb-3">Quick Actions</h6>
               <div className="d-flex flex-wrap gap-2">
                 <Link href="/analysts" className="btn btn-outline-primary btn-sm">
                   <i className="bi bi-graph-up me-1"></i>
@@ -205,7 +205,7 @@ export default function ToolsPage() {
       <div className="row mt-3">
         <div className="col-12">
           <div className="text-center">
-            <small className="text-muted">
+            <small className="text-secondary">
               Need detailed analysis? Visit the{' '}
               <Link href="/analysts" className="text-primary text-decoration-none">
                 Analysts section

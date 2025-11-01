@@ -101,7 +101,7 @@ export default function AnalystsPage() {
       {/* PAGE HEADER: Title and description */}
       <div className="mb-4">
         <h1 className="mb-2">Analyst Insights</h1>
-        <p className="text-muted mb-0">Comprehensive analysis and charts for each cryptocurrency</p>
+        <p className="text-secondary mb-0">Comprehensive analysis and charts for each cryptocurrency</p>
       </div>
 
       {/* TOKEN GRID: Clickable cards for each supported cryptocurrency */}
@@ -122,9 +122,9 @@ export default function AnalystsPage() {
                      <div className="d-flex justify-content-between align-items-start mb-3">
                        <div>
                           <h5 className="card-title mb-1 token-name">{token}</h5>
-                         <small className="text-muted">
-                           {analystCount} analyst{analystCount !== 1 ? 's' : ''}
-                         </small>
+                          <small className="text-secondary">
+                            {analystCount} analyst{analystCount !== 1 ? 's' : ''}
+                          </small>
                        </div>
                        <div className="text-end">
                          <div className="fw-bold">{formatPrice(priceData.price)}</div>
@@ -135,7 +135,7 @@ export default function AnalystsPage() {
                      <div className="row g-2 mb-3">
                        <div className="col-6">
                          <div className="text-center p-2 bg-light rounded">
-                           <small className="text-muted d-block">1H</small>
+                            <small className="text-secondary d-block">1H</small>
                            <span className={`fw-bold ${getPriceClass(priceData.change1h)}`}>
                              {formatChange(priceData.change1h)}
                            </span>
@@ -143,7 +143,7 @@ export default function AnalystsPage() {
                        </div>
                        <div className="col-6">
                          <div className="text-center p-2 bg-light rounded">
-                           <small className="text-muted d-block">24H</small>
+                            <small className="text-secondary d-block">24H</small>
                            <span className={`fw-bold ${getPriceClass(priceData.change24h)}`}>
                              {formatChange(priceData.change24h)}
                            </span>
@@ -153,9 +153,9 @@ export default function AnalystsPage() {
 
                      {/* CARD FOOTER: Post count and call-to-action */}
                      <div className="d-flex justify-content-between align-items-center">
-                       <small className="text-muted">
-                         {tokenPosts.length} analysis post{tokenPosts.length !== 1 ? 's' : ''}
-                       </small>
+                        <small className="text-secondary">
+                          {tokenPosts.length} analysis post{tokenPosts.length !== 1 ? 's' : ''}
+                        </small>
                        <span className="badge bg-primary pulse-orange">
                          View Summary <i className="bi bi-arrow-right ms-1"></i>
                        </span>
@@ -173,13 +173,13 @@ export default function AnalystsPage() {
         <div className="col-12">
           <div className="card">
             <div className="card-body">
-              <h6 className="card-title text-muted mb-3">Analysis Summary</h6>
+               <h6 className="card-title text-secondary mb-3">Analysis Summary</h6>
               <div className="row text-center">
                 {/* Total tokens being tracked */}
                 <div className="col-md-3">
                   <div className="p-3">
                     <h4 className="text-primary mb-1">{tokens.length}</h4>
-                    <small className="text-muted">Tokens Tracked</small>
+                    <small className="text-secondary">Tokens Tracked</small>
                   </div>
                 </div>
 
@@ -189,7 +189,7 @@ export default function AnalystsPage() {
                     <h4 className="text-success mb-1">
                       {new Set(mockTradingPosts.map(post => post.user)).size}
                     </h4>
-                    <small className="text-muted">Active Analysts</small>
+                    <small className="text-secondary">Active Analysts</small>
                   </div>
                 </div>
 
@@ -197,7 +197,7 @@ export default function AnalystsPage() {
                 <div className="col-md-3">
                   <div className="p-3">
                     <h4 className="text-info mb-1">{mockTradingPosts.length}</h4>
-                    <small className="text-muted">Total Posts</small>
+                    <small className="text-secondary">Total Posts</small>
                   </div>
                 </div>
 
@@ -207,7 +207,7 @@ export default function AnalystsPage() {
                     <h4 className="text-warning mb-1">
                       {Math.round(mockTradingPosts.length / tokens.length)}
                     </h4>
-                    <small className="text-muted">Avg Posts/Token</small>
+                    <small className="text-secondary">Avg Posts/Token</small>
                   </div>
                 </div>
               </div>
@@ -220,7 +220,7 @@ export default function AnalystsPage() {
       <div className="row mt-3">
         <div className="col-12">
           <div className="text-center">
-            <small className="text-muted">
+            <small className="text-secondary">
               Looking for market data and tools? Check out the{' '}
               <Link href="/tools" className="text-primary text-decoration-none">
                 Tools section

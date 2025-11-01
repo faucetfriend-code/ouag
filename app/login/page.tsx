@@ -39,7 +39,7 @@ export default function LoginPage() {
                 </div>
 
                 <h2 className="card-title mb-3">Welcome to Unity Oracle</h2>
-                <p className="text-muted mb-4">
+                <p className="text-secondary mb-4">
                   Connect with Discord to access premium crypto analysis and trading insights.
                 </p>
 
@@ -52,7 +52,7 @@ export default function LoginPage() {
                   Login with Discord
                 </button>
 
-                <div className="small text-muted">
+                <div className="small text-secondary">
                   <p className="mb-2">
                     <i className="bi bi-shield-check me-1"></i>
                     Server membership required
@@ -66,7 +66,7 @@ export default function LoginPage() {
             </div>
 
             <div className="text-center mt-3">
-              <small className="text-muted">
+              <small className="text-secondary">
                 By logging in, you agree to our terms of service and privacy policy.
               </small>
             </div>

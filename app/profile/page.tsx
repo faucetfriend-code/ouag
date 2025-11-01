@@ -70,7 +70,7 @@ export default function ProfilePage() {
 
        <div className="mb-4">
          <h1 className="mb-2">Profile</h1>
-         <p className="text-muted mb-0">Manage your account, portfolio, and trading preferences</p>
+         <p className="text-secondary mb-0">Manage your account, portfolio, and trading preferences</p>
        </div>
 
        {/* Subscription Status */}
@@ -85,14 +85,14 @@ export default function ProfilePage() {
                      {user.subscription?.active ? 'Premium Subscription Active' : 'No Active Subscription'}
                    </h5>
                    {user.subscription?.active && user.subscription.endDate && (
-                     <p className="text-muted mb-0">
-                       Expires: {new Date(user.subscription.endDate).toLocaleDateString()}
-                     </p>
+                      <p className="text-secondary mb-0">
+                        Expires: {new Date(user.subscription.endDate).toLocaleDateString()}
+                      </p>
                    )}
                    {!user.subscription?.active && (
-                     <p className="text-muted mb-0">
-                       Subscribe to access premium features and analyst insights.
-                     </p>
+                      <p className="text-secondary mb-0">
+                        Subscribe to access premium features and analyst insights.
+                      </p>
                    )}
                  </div>
                  <div>
@@ -130,14 +130,14 @@ export default function ProfilePage() {
                  )}
                </div>
                <h5 className="card-title mb-1">{user.username}#{user.discriminator}</h5>
-               {user.email && <p className="text-muted small mb-2">{user.email}</p>}
+               {user.email && <p className="text-secondary small mb-2">{user.email}</p>}
                <div className="mb-3">
                  <span className={`badge ${user.isServerMember ? 'bg-success' : 'bg-danger'}`}>
                    <i className={`bi ${user.isServerMember ? 'bi-check-circle' : 'bi-x-circle'} me-1`}></i>
                    {user.isServerMember ? 'Server Member' : 'Not a Member'}
                  </span>
                </div>
-               <p className="card-text small text-muted">
+               <p className="card-text small text-secondary">
                  Discord user connected and verified.
                </p>
                <button onClick={logout} className="btn btn-outline-danger btn-sm w-100">
@@ -210,13 +210,13 @@ export default function ProfilePage() {
                             </div>
                             <div>
                               <div className="fw-bold">{holding.token}</div>
-                              <small className="text-muted">{holding.amount} {holding.token}</small>
+                               <small className="text-secondary">{holding.amount} {holding.token}</small>
                             </div>
                           </div>
                         </td>
                         <td className="text-end">
                           <div>{holding.amount}</div>
-                          <small className="text-muted">{holding.token}</small>
+                           <small className="text-secondary">{holding.token}</small>
                         </td>
                         <td className="text-end fw-bold">
                           {formatCurrency(holding.value)}
@@ -310,21 +310,21 @@ export default function ProfilePage() {
                 <div className="timeline-item mb-3">
                   <div className="timeline-marker bg-success"></div>
                   <div className="timeline-content">
-                    <small className="text-muted">2 hours ago</small>
+                    <small className="text-secondary">2 hours ago</small>
                     <div>Viewed BTC analysis from btc_analyst1</div>
                   </div>
                 </div>
                 <div className="timeline-item mb-3">
                   <div className="timeline-marker bg-info"></div>
                   <div className="timeline-content">
-                    <small className="text-muted">1 day ago</small>
+                    <small className="text-secondary">1 day ago</small>
                     <div>Updated portfolio holdings</div>
                   </div>
                 </div>
                 <div className="timeline-item">
                   <div className="timeline-marker bg-primary"></div>
                   <div className="timeline-content">
-                    <small className="text-muted">3 days ago</small>
+                    <small className="text-secondary">3 days ago</small>
                     <div>Joined Unity Oracle Aggregator</div>
                   </div>
                 </div>
@@ -338,7 +338,7 @@ export default function ProfilePage() {
       <div className="row mt-3">
         <div className="col-12">
           <div className="text-center">
-            <small className="text-muted">
+            <small className="text-secondary">
               Ready to trade? Explore{' '}
               <Link href="/analysts" className="text-primary text-decoration-none">
                 analyst insights
