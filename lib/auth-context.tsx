@@ -36,7 +36,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     discordId: '123456789',
     username: 'Doom',
     discriminator: '0001',
-    avatar: null,
+    avatar: undefined,
     email: 'doom@test.com',
     isServerMember: true,
     subscription: {
