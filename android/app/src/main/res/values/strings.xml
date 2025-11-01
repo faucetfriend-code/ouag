@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">Unity Oracle Aggregator</string>
+    <string name="title_activity_main">Unity Oracle Aggregator</string>
+    <string name="package_name">com.unityoracle.aggregator</string>
+    <string name="custom_url_scheme">com.unityoracle.aggregator</string>
+</resources>
