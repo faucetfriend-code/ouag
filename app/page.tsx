@@ -11,7 +11,7 @@ import Link from 'next/link';
 import { useAuth } from '@/lib/auth-context';
 
 export default function Home() {
-  const { user, login, logout, loading } = useAuth();
+  const { user, login, logout, loading, canAccessPremium, grantTestAccess } = useAuth();
 
   return (
     <>
@@ -62,12 +62,23 @@ export default function Home() {
           <span className="badge bg-danger me-2">Real-time Data</span>
           <span className="badge bg-primary">Expert Insights</span>
         </div>
+
+        {/* TEST ACCESS BUTTON: For development/testing */}
+        {user && !canAccessPremium() && (
+          <div className="mt-4">
+            <button onClick={grantTestAccess} className="btn btn-success btn-lg">
+              <i className="bi bi-unlock me-2"></i>
+              Grant Test Access
+            </button>
+            <p className="text-secondary mt-2 small">Enable premium features for testing</p>
+          </div>
+        )}
       </div>
 
       {/* FEATURE CARDS: Main navigation to app sections */}
       <div className="row g-4">
         {/* PROFILE CARD: User account management */}
-        <div className="col-md-4">
+        <div className="col-lg-6 col-md-6">
           <div className="card h-100 shadow-sm hover-card">
             <div className="card-body text-center">
               <div className="mb-3">
@@ -86,7 +97,7 @@ export default function Home() {
         </div>
 
         {/* TRADING TOOLS CARD: Market data and analysis tools */}
-        <div className="col-md-4">
+        <div className="col-lg-6 col-md-6">
           <div className="card h-100 shadow-sm hover-card">
             <div className="card-body text-center">
               <div className="mb-3">
@@ -105,7 +116,7 @@ export default function Home() {
         </div>
 
         {/* ANALYST INSIGHTS CARD: Expert analysis and sentiment */}
-        <div className="col-md-4">
+        <div className="col-lg-6 col-md-6">
           <div className="card h-100 shadow-sm hover-card">
             <div className="card-body text-center">
               <div className="mb-3">
@@ -118,6 +129,25 @@ export default function Home() {
               <Link href="/analysts" className="btn btn-info">
                 <i className="bi bi-arrow-right-circle me-2"></i>
                 Browse Analysis
+              </Link>
+            </div>
+          </div>
+        </div>
+
+        {/* ANALYST COMMENTS CARD: Direct access to analyst discussions */}
+        <div className="col-lg-6 col-md-6">
+          <div className="card h-100 shadow-sm hover-card">
+            <div className="card-body text-center">
+              <div className="mb-3">
+                <i className="bi bi-chat-quote display-4 text-info pulse-blue"></i>
+              </div>
+              <h5 className="card-title">Analyst Comments</h5>
+              <p className="card-text text-secondary">
+                Read raw analyst comments and discussions for real-time market sentiment.
+              </p>
+              <Link href="/analysts" className="btn btn-secondary">
+                <i className="bi bi-arrow-right-circle me-2"></i>
+                View Comments
               </Link>
             </div>
           </div>
