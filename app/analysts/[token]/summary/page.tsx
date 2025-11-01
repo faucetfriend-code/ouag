@@ -1,5 +1,5 @@
-import Link from 'next/link';
-import { notFound } from 'next/navigation';
+ import Link from 'next/link';
+ import { notFound } from 'next/navigation';
 import { mockTradingPosts, tokens } from '../../../../data/mockData';
 import { organizeDataByToken } from '../../../../utils/dataOrganization';
 
@@ -10,19 +10,29 @@ interface TokenSummaryPageProps {
 }
 
 export default async function TokenSummaryPage({ params }: TokenSummaryPageProps) {
+  // Extract token parameter from URL
   const { token } = await params;
 
-  // Validate token exists
-  if (!tokens.includes(token.toUpperCase())) {
+  // Convert token to uppercase for consistent data access
+  const tokenUpper = token.toUpperCase();
+
+  // Validate that the token exists in our supported list
+  if (!tokens.includes(tokenUpper)) {
     notFound();
   }
 
+  // Get all trading posts and filter for this specific token
   const organizedData = organizeDataByToken(mockTradingPosts);
-  const tokenPosts = organizedData[token.toUpperCase()] || [];
+  const tokenPosts = organizedData[tokenUpper] || [];
 
-  // Group posts by analyst and analyze their sentiment/content
+  /**
+   * ANALYST DATA PROCESSING
+   * Group posts by analyst and perform sentiment analysis on their content
+   */
   const analystSummaries = tokenPosts.reduce((acc, post) => {
     const analyst = post.user;
+
+    // Initialize analyst data structure if this is their first post
     if (!acc[analyst]) {
       acc[analyst] = {
         posts: [],
@@ -35,28 +45,61 @@ export default async function TokenSummaryPage({ params }: TokenSummaryPageProps
       };
     }
 
+    // Add post to analyst's collection
     acc[analyst].posts.push(post);
     acc[analyst].totalPosts++;
 
-    // Analyze sentiment from analysis text
+    // Perform sentiment analysis on the analysis text
     if (post.analysis) {
       const analysis = post.analysis.toLowerCase();
-      if (analysis.includes('bullish') || analysis.includes('buy') || analysis.includes('long')) {
+
+      // Define keyword lists for sentiment detection
+      const bullishKeywords = [
+        'bullish', 'buy', 'long', 'positive', 'breakout', 'target', 'accumulation',
+        'strong buying', 'oversold', 'bullish for', 'positive for', 'breakout likely',
+        'crossover bullish', 'whale activity', 'fibonacci extension', 'macd crossover',
+        'strong support', 'accumulation phase', 'etf inflows', 'institutional demand'
+      ];
+
+      const bearishKeywords = [
+        'bearish', 'sell', 'short', 'caution', 'reversal', 'risk-off', 'rotation',
+        'altcoin momentum', 'decreasing', 'watch for altcoin', 'rotation out of',
+        'bearish divergence', 'potential reversal', 'stop loss'
+      ];
+
+      // Check for bullish and bearish signals
+      const isBullish = bullishKeywords.some(keyword => analysis.includes(keyword));
+      const isBearish = bearishKeywords.some(keyword => analysis.includes(keyword));
+
+      // Categorize sentiment based on keyword matches
+      if (isBullish && !isBearish) {
         acc[analyst].bullishCount++;
-      } else if (analysis.includes('bearish') || analysis.includes('sell') || analysis.includes('short')) {
+      } else if (isBearish && !isBullish) {
         acc[analyst].bearishCount++;
       } else {
+        // Mixed signals or no clear sentiment = neutral
         acc[analyst].neutralCount++;
       }
 
-      // Extract key points (first sentence or key phrases)
+      // Extract key insights from the analysis text
       const sentences = post.analysis.split(/[.!?]+/).filter(s => s.trim().length > 10);
-      if (sentences.length > 0) {
-        acc[analyst].keyPoints.push(sentences[0].trim());
+
+      // Priority: Look for price targets (e.g., "$58k", "$62k")
+      const priceTargetMatch = post.analysis.match(/\$[\d,]+k?|\d+k?\s*target/i);
+      if (priceTargetMatch) {
+        acc[analyst].keyPoints.push(`Price target: ${priceTargetMatch[0]}`);
+      } else if (sentences.length > 0) {
+        // Fallback: Use first meaningful sentence (truncated if too long)
+        const firstSentence = sentences[0].trim();
+        acc[analyst].keyPoints.push(
+          firstSentence.length > 80
+            ? firstSentence.substring(0, 77) + '...'
+            : firstSentence
+        );
       }
     }
 
-    // Update latest post date
+    // Track the most recent post date for this analyst
     if (post.timestamp > acc[analyst].latestPost) {
       acc[analyst].latestPost = post.timestamp;
     }
@@ -72,7 +115,11 @@ export default async function TokenSummaryPage({ params }: TokenSummaryPageProps
     latestPost: Date;
   }>);
 
-  // Calculate overall sentiment for each analyst
+  /**
+   * SENTIMENT ANALYSIS HELPERS
+   */
+
+  // Determine overall sentiment for an individual analyst
   const getOverallSentiment = (analyst: any) => {
     const { bullishCount, bearishCount, neutralCount } = analyst;
     if (bullishCount > bearishCount && bullishCount > neutralCount) return 'bullish';
@@ -80,25 +127,38 @@ export default async function TokenSummaryPage({ params }: TokenSummaryPageProps
     return 'neutral';
   };
 
+  // Calculate aggregate sentiment across all analysts for this token
+  const totalBullish = Object.values(analystSummaries).reduce((sum: number, analyst: any) => sum + analyst.bullishCount, 0);
+  const totalBearish = Object.values(analystSummaries).reduce((sum: number, analyst: any) => sum + analyst.bearishCount, 0);
+  const totalNeutral = Object.values(analystSummaries).reduce((sum: number, analyst: any) => sum + analyst.neutralCount, 0);
+
+  // Determine overall market sentiment based on aggregate signals
+  const overallSentiment = totalBullish > totalBearish && totalBullish > totalNeutral ? 'bullish' :
+                          totalBearish > totalBullish && totalBearish > totalNeutral ? 'bearish' : 'neutral';
+
+  // UI helper functions for sentiment styling
   const getSentimentColor = (sentiment: string) => {
     switch (sentiment) {
-      case 'bullish': return 'text-warning';
-      case 'bearish': return 'text-danger';
-      default: return 'text-muted';
+      case 'bullish': return 'text-warning';  // Yellow for bullish
+      case 'bearish': return 'text-danger';   // Red for bearish
+      default: return 'text-muted';           // Gray for neutral
     }
   };
 
   const getSentimentBadge = (sentiment: string) => {
     switch (sentiment) {
-      case 'bullish': return 'bg-warning text-dark';
-      case 'bearish': return 'bg-danger';
-      default: return 'bg-secondary';
+      case 'bullish': return 'bg-warning text-dark';  // Yellow badge for bullish
+      case 'bearish': return 'bg-danger';             // Red badge for bearish
+      default: return 'bg-secondary';                 // Gray badge for neutral
     }
   };
 
+  /**
+   * RENDER COMPONENT UI
+   */
   return (
     <div className="container mt-4">
-      {/* Breadcrumb Navigation */}
+      {/* NAVIGATION: Breadcrumb trail for easy navigation */}
       <nav aria-label="breadcrumb" className="mb-3">
         <ol className="breadcrumb">
           <li className="breadcrumb-item">
@@ -108,7 +168,7 @@ export default async function TokenSummaryPage({ params }: TokenSummaryPageProps
             <Link href="/analysts" className="text-decoration-none">Analysts</Link>
           </li>
           <li className="breadcrumb-item">
-            <Link href={`/analysts/${token}`} className="text-decoration-none">{token.toUpperCase()}</Link>
+            <Link href={`/analysts/${token}`} className="text-decoration-none">{tokenUpper}</Link>
           </li>
           <li className="breadcrumb-item active" aria-current="page">
             Summary
@@ -116,31 +176,83 @@ export default async function TokenSummaryPage({ params }: TokenSummaryPageProps
         </ol>
       </nav>
 
-      {/* Header */}
+      {/* HEADER SECTION: Page title, navigation, and key metrics */}
       <div className="d-flex justify-content-between align-items-center mb-4">
         <div>
-          <Link href={`/analysts/${token}`} className="btn btn-outline-secondary btn-sm mb-2">
-            <i className="bi bi-arrow-left me-2"></i>
-            Back to Analysis
-          </Link>
-          <h1 className="mb-2">{token.toUpperCase()} Analyst Summary</h1>
-          <p className="text-muted mb-0">What each analyst has said most about {token.toUpperCase()}</p>
+          {/* Navigation buttons */}
+          <div className="d-flex gap-2 mb-2">
+            <Link href={`/analysts/${token}`} className="btn btn-outline-secondary btn-sm">
+              <i className="bi bi-arrow-left me-2"></i>
+              Back to Analysis
+            </Link>
+          </div>
+
+          {/* Page title and description */}
+          <h1 className="mb-2">{tokenUpper} Analyst Summary</h1>
+          <p className="text-muted mb-3">What each analyst has said most about {tokenUpper}</p>
+
+          {/* OVERALL SENTIMENT INDICATOR: Big visual showing market consensus */}
+          <div className="d-flex justify-content-center mb-3">
+            <div className={`badge fs-6 px-4 py-2 ${
+              overallSentiment === 'bullish' ? 'bg-warning text-dark' :
+              overallSentiment === 'bearish' ? 'bg-danger' : 'bg-secondary'
+            }`}>
+              <i className={`bi me-2 ${
+                overallSentiment === 'bullish' ? 'bi-arrow-up-circle-fill' :
+                overallSentiment === 'bearish' ? 'bi-arrow-down-circle-fill' : 'bi-dash-circle-fill'
+              }`}></i>
+              Overall Sentiment: {overallSentiment.toUpperCase()}
+            </div>
+          </div>
         </div>
+
+        {/* Analyst count metric */}
         <div className="text-end">
           <div className="h4 mb-0">{Object.keys(analystSummaries).length}</div>
           <small className="text-muted">Active Analysts</small>
         </div>
       </div>
 
-      {/* Overall Market Sentiment */}
+      {/* MARKET SENTIMENT OVERVIEW: Visual breakdown of all analyst signals */}
       <div className="row mb-4">
         <div className="col-12">
           <div className="card glow-orange">
             <div className="card-body">
               <h5 className="card-title text-center mb-3">
                 <i className="bi bi-graph-up me-2"></i>
-                Overall Market Sentiment
+                {tokenUpper} Market Sentiment Analysis
               </h5>
+
+              {/* Data source info */}
+              <div className="text-center mb-3">
+                <small className="text-muted">
+                  Based on {tokenPosts.length} analyst posts from {Object.keys(analystSummaries).length} experts
+                </small>
+              </div>
+
+              {/* AGGREGATE SENTIMENT STATISTICS: Total bullish/bearish/neutral counts */}
+              <div className="row text-center mb-4">
+                <div className="col-md-4">
+                  <div className="p-3 bg-light rounded">
+                    <div className={`h4 mb-1 ${getSentimentColor('bullish')}`}>{totalBullish}</div>
+                    <small className="text-muted">Bullish Signals</small>
+                  </div>
+                </div>
+                <div className="col-md-4">
+                  <div className="p-3 bg-light rounded">
+                    <div className={`h4 mb-1 ${getSentimentColor('bearish')}`}>{totalBearish}</div>
+                    <small className="text-muted">Bearish Signals</small>
+                  </div>
+                </div>
+                <div className="col-md-4">
+                  <div className="p-3 bg-light rounded">
+                    <div className={`h4 mb-1 ${getSentimentColor('neutral')}`}>{totalNeutral}</div>
+                    <small className="text-muted">Neutral Signals</small>
+                  </div>
+                </div>
+              </div>
+
+              {/* INDIVIDUAL ANALYST SENTIMENT GRID: Quick overview of each analyst's position */}
               <div className="row text-center">
                 {Object.entries(analystSummaries).map(([analyst, data]) => {
                   const sentiment = getOverallSentiment(data);
@@ -164,98 +276,99 @@ export default async function TokenSummaryPage({ params }: TokenSummaryPageProps
         </div>
       </div>
 
-      {/* Analyst Details */}
-      <div className="row">
-        {Object.entries(analystSummaries).map(([analyst, data]) => {
-          const sentiment = getOverallSentiment(data);
-          return (
-            <div key={analyst} className="col-12 mb-4">
-              <div className="card">
-                <div className="card-header d-flex justify-content-between align-items-center">
-                  <h5 className="mb-0">
-                    <i className="bi bi-person-circle me-2"></i>
-                    {analyst}
-                  </h5>
-                  <div className="d-flex align-items-center gap-2">
-                    <span className={`badge ${getSentimentBadge(sentiment)}`}>
-                      {sentiment.toUpperCase()}
-                    </span>
-                    <small className="text-muted">
-                      {data.totalPosts} post{data.totalPosts !== 1 ? 's' : ''}
-                    </small>
-                  </div>
-                </div>
-                <div className="card-body">
-                  {/* Sentiment Breakdown */}
-                  <div className="row mb-3">
-                    <div className="col-md-4">
-                      <div className="text-center p-3 bg-light rounded">
-                        <div className={`h4 mb-1 ${getSentimentColor('bullish')}`}>
-                          {data.bullishCount}
-                        </div>
-                        <small className="text-muted">Bullish Signals</small>
-                      </div>
-                    </div>
-                    <div className="col-md-4">
-                      <div className="text-center p-3 bg-light rounded">
-                        <div className={`h4 mb-1 ${getSentimentColor('bearish')}`}>
-                          {data.bearishCount}
-                        </div>
-                        <small className="text-muted">Bearish Signals</small>
-                      </div>
-                    </div>
-                    <div className="col-md-4">
-                      <div className="text-center p-3 bg-light rounded">
-                        <div className={`h4 mb-1 ${getSentimentColor('neutral')}`}>
-                          {data.neutralCount}
-                        </div>
-                        <small className="text-muted">Neutral Signals</small>
-                      </div>
-                    </div>
-                  </div>
+       {/* DETAILED ANALYST BREAKDOWN: In-depth analysis for each expert */}
+       <div className="row">
+         {Object.entries(analystSummaries).map(([analyst, data]) => {
+           const sentiment = getOverallSentiment(data);
+           return (
+             <div key={analyst} className="col-12 mb-4">
+               <div className="card">
+                 {/* Analyst header with name and overall sentiment */}
+                 <div className="card-header d-flex justify-content-between align-items-center">
+                   <h5 className="mb-0">
+                     <i className="bi bi-person-circle me-2"></i>
+                     {analyst}
+                   </h5>
+                   <div className="d-flex align-items-center gap-2">
+                     <span className={`badge ${getSentimentBadge(sentiment)}`}>
+                       {sentiment.toUpperCase()}
+                     </span>
+                     <small className="text-muted">
+                       {data.totalPosts} post{data.totalPosts !== 1 ? 's' : ''}
+                     </small>
+                   </div>
+                 </div>
+                 <div className="card-body">
+                   {/* INDIVIDUAL SENTIMENT BREAKDOWN: Analyst's bullish/bearish/neutral signal counts */}
+                   <div className="row mb-3">
+                     <div className="col-md-4">
+                       <div className="text-center p-3 bg-light rounded">
+                         <div className={`h4 mb-1 ${getSentimentColor('bullish')}`}>
+                           {data.bullishCount}
+                         </div>
+                         <small className="text-muted">Bullish Signals</small>
+                       </div>
+                     </div>
+                     <div className="col-md-4">
+                       <div className="text-center p-3 bg-light rounded">
+                         <div className={`h4 mb-1 ${getSentimentColor('bearish')}`}>
+                           {data.bearishCount}
+                         </div>
+                         <small className="text-muted">Bearish Signals</small>
+                       </div>
+                     </div>
+                     <div className="col-md-4">
+                       <div className="text-center p-3 bg-light rounded">
+                         <div className={`h4 mb-1 ${getSentimentColor('neutral')}`}>
+                           {data.neutralCount}
+                         </div>
+                         <small className="text-muted">Neutral Signals</small>
+                       </div>
+                     </div>
+                   </div>
 
-                  {/* Key Points */}
-                  {data.keyPoints.length > 0 && (
-                    <div className="mb-3">
-                      <h6 className="text-warning mb-3">
-                        <i className="bi bi-lightbulb me-2"></i>
-                        Key Analysis Points
-                      </h6>
-                      <div className="row">
-                        {data.keyPoints.slice(0, 3).map((point, index) => (
-                          <div key={index} className="col-md-4 mb-2">
-                            <div className="alert alert-info py-2 px-3">
-                              <small>{point}</small>
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  )}
+                   {/* KEY ANALYSIS POINTS: Most important insights from this analyst */}
+                   {data.keyPoints.length > 0 && (
+                     <div className="mb-3">
+                       <h6 className="text-warning mb-3">
+                         <i className="bi bi-lightbulb me-2"></i>
+                         Key Analysis Points
+                       </h6>
+                       <div className="row">
+                         {data.keyPoints.slice(0, 3).map((point, index) => (
+                           <div key={index} className="col-md-4 mb-2">
+                             <div className="alert alert-info py-2 px-3">
+                               <small>{point}</small>
+                             </div>
+                           </div>
+                         ))}
+                       </div>
+                     </div>
+                   )}
 
-                  {/* Recent Activity */}
-                  <div className="border-top pt-3">
-                    <div className="d-flex justify-content-between align-items-center">
-                      <small className="text-muted">
-                        Latest post: {data.latestPost.toLocaleDateString()}
-                      </small>
-                      <Link
-                        href={`/analysts/${token}`}
-                        className="btn btn-primary btn-sm"
-                      >
-                        View Full Analysis
-                        <i className="bi bi-arrow-right ms-2"></i>
-                      </Link>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          );
-        })}
-      </div>
+                   {/* ACTIVITY SUMMARY: Recent posting activity and navigation */}
+                   <div className="border-top pt-3">
+                     <div className="d-flex justify-content-between align-items-center">
+                       <small className="text-muted">
+                         Latest post: {data.latestPost.toLocaleDateString()}
+                       </small>
+                       <Link
+                         href={`/analysts/${token}`}
+                         className="btn btn-primary btn-sm"
+                       >
+                         View Full Analysis
+                         <i className="bi bi-arrow-right ms-2"></i>
+                       </Link>
+                     </div>
+                   </div>
+                 </div>
+               </div>
+             </div>
+           );
+         })}
+       </div>
 
-      {/* Quick Actions */}
+      {/* QUICK NAVIGATION: Easy access to related features */}
       <div className="row mt-4">
         <div className="col-12">
           <div className="card">
@@ -264,7 +377,7 @@ export default async function TokenSummaryPage({ params }: TokenSummaryPageProps
               <div className="d-flex justify-content-center gap-3">
                 <Link href={`/analysts/${token}`} className="btn btn-primary">
                   <i className="bi bi-graph-up me-2"></i>
-                  View Charts
+                  View Detailed Analysis
                 </Link>
                 <Link href="/analysts" className="btn btn-outline-secondary">
                   <i className="bi bi-arrow-left me-2"></i>
@@ -283,9 +396,12 @@ export default async function TokenSummaryPage({ params }: TokenSummaryPageProps
   );
 }
 
-// Generate static params for all tokens
+/**
+ * STATIC SITE GENERATION
+ * Pre-generate summary pages for all supported tokens at build time
+ */
 export async function generateStaticParams() {
   return tokens.map((token) => ({
-    token: token.toLowerCase(),
+    token: token.toLowerCase(), // URL parameters are lowercase
   }));
 }

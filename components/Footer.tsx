@@ -1,3 +1,10 @@
+/**
+ * Footer Component
+ *
+ * Site-wide footer with branding, navigation links, and platform statistics.
+ * Provides consistent footer across all pages.
+ */
+
 import Link from 'next/link';
 
 export default function Footer() {
@@ -5,12 +12,15 @@ export default function Footer() {
     <footer className="bg-light mt-5 py-4">
       <div className="container">
         <div className="row">
+          {/* BRAND SECTION: Company info and tagline */}
           <div className="col-md-4 mb-3">
             <h6 className="fw-bold text-primary">Unity Oracle Aggregator</h6>
             <p className="small text-muted mb-0">
               Your comprehensive crypto trading intelligence platform
             </p>
           </div>
+
+          {/* NAVIGATION LINKS: Quick access to main sections */}
           <div className="col-md-4 mb-3">
             <h6 className="fw-bold">Quick Links</h6>
             <div className="d-flex flex-column">
@@ -32,6 +42,8 @@ export default function Footer() {
               </Link>
             </div>
           </div>
+
+          {/* PLATFORM STATISTICS: Key metrics overview */}
           <div className="col-md-4 mb-3">
             <h6 className="fw-bold">Market Overview</h6>
             <div className="small text-muted">
@@ -50,6 +62,8 @@ export default function Footer() {
             </div>
           </div>
         </div>
+
+        {/* COPYRIGHT NOTICE */}
         <hr className="my-3" />
         <div className="text-center small text-muted">
           <p className="mb-0">

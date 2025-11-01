@@ -27,14 +27,17 @@ interface TokenPageProps {
 export default async function TokenAnalysisPage({ params }: TokenPageProps) {
   const { token } = await params;
 
+  // Convert token to uppercase for consistency
+  const tokenUpper = token.toUpperCase();
+
   // Validate token exists
-  if (!tokens.includes(token.toUpperCase())) {
+  if (!tokens.includes(tokenUpper)) {
     notFound();
   }
 
   const organizedData = organizeDataByToken(mockTradingPosts);
-  const tokenPosts = organizedData[token.toUpperCase()] || [];
-  const priceData = mockPriceData[token.toUpperCase()];
+  const tokenPosts = organizedData[tokenUpper] || [];
+  const priceData = mockPriceData[tokenUpper];
 
   const getPriceClass = (change: number) => {
     if (change > 0) return 'price-positive';
@@ -76,7 +79,7 @@ export default async function TokenAnalysisPage({ params }: TokenPageProps) {
             <Link href="/analysts" className="text-decoration-none">Analysts</Link>
           </li>
           <li className="breadcrumb-item active" aria-current="page">
-            {token.toUpperCase()}
+            {tokenUpper}
           </li>
         </ol>
       </nav>
@@ -94,7 +97,7 @@ export default async function TokenAnalysisPage({ params }: TokenPageProps) {
               View Summary
             </Link>
           </div>
-          <h1 className="mb-2">{token.toUpperCase()} Analysis</h1>
+          <h1 className="mb-2">{tokenUpper} Analysis</h1>
           <p className="text-muted mb-0">Comprehensive analyst insights and technical analysis</p>
         </div>
         <div className="text-end">
@@ -212,7 +215,7 @@ export default async function TokenAnalysisPage({ params }: TokenPageProps) {
                 <h5 className="mb-0">Combined Analyst Charts</h5>
               </div>
               <div className="card-body">
-                <TokenCard token={token.toUpperCase()} posts={tokenPosts} />
+                <TokenCard token={tokenUpper} posts={tokenPosts} />
               </div>
             </div>
           </div>

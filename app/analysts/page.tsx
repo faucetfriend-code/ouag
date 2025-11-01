@@ -1,8 +1,15 @@
+/**
+ * Analysts Overview Page
+ *
+ * Displays a grid of all supported tokens with key metrics and analyst counts.
+ * Each token card links to a detailed summary page showing analyst sentiment.
+ */
+
 import Link from 'next/link';
 import { mockTradingPosts, tokens } from '../../data/mockData';
 import { organizeDataByToken } from '../../utils/dataOrganization';
 
-// Mock price data for demonstration
+// Mock price data for demonstration (would come from real API in production)
 const mockPriceData: Record<string, { price: number; change1h: number; change24h: number }> = {
   BTC: { price: 58750, change1h: 0.85, change24h: 2.34 },
   ETH: { price: 1950, change1h: -0.23, change24h: 1.67 },
@@ -17,14 +24,21 @@ const mockPriceData: Record<string, { price: number; change1h: number; change24h
 };
 
 export default function AnalystsPage() {
+  // Group all trading posts by token for analysis
   const organizedData = organizeDataByToken(mockTradingPosts);
 
+  /**
+   * UI HELPER FUNCTIONS
+   */
+
+  // Get CSS class for price change styling (positive = green, negative = red)
   const getPriceClass = (change: number) => {
     if (change > 0) return 'price-positive';
     if (change < 0) return 'price-negative';
     return 'price-neutral';
   };
 
+  // Format price display (whole dollars for >$1, 4 decimals for < $1)
   const formatPrice = (price: number) => {
     if (price >= 1) {
       return `$${price.toFixed(2)}`;
@@ -33,6 +47,7 @@ export default function AnalystsPage() {
     }
   };
 
+  // Format percentage change with +/- sign
   const formatChange = (change: number) => {
     const sign = change >= 0 ? '+' : '';
     return `${sign}${change.toFixed(2)}%`;
@@ -40,7 +55,7 @@ export default function AnalystsPage() {
 
   return (
     <div className="container mt-4">
-      {/* Breadcrumb Navigation */}
+      {/* NAVIGATION: Breadcrumb for easy navigation */}
       <nav aria-label="breadcrumb" className="mb-3">
         <ol className="breadcrumb">
           <li className="breadcrumb-item">
@@ -52,22 +67,27 @@ export default function AnalystsPage() {
         </ol>
       </nav>
 
+      {/* PAGE HEADER: Title and description */}
       <div className="mb-4">
         <h1 className="mb-2">Analyst Insights</h1>
         <p className="text-muted mb-0">Comprehensive analysis and charts for each cryptocurrency</p>
       </div>
 
+      {/* TOKEN GRID: Clickable cards for each supported cryptocurrency */}
       <div className="row g-4">
         {tokens.map((token) => {
+           // Get data for this specific token
            const tokenPosts = organizedData[token] || [];
            const priceData = mockPriceData[token];
            const analystCount = new Set(tokenPosts.map(post => post.user)).size;
 
            return (
              <div key={token} className="col-md-6 col-lg-4">
-               <Link href={`/analysts/${token}/summary`} className="text-decoration-none">
+               {/* TOKEN CARD: Links to summary page showing analyst sentiment */}
+               <Link href={`/analysts/${token.toLowerCase()}/summary`} className="text-decoration-none">
                  <div className="card h-100 shadow-sm hover-card glow-orange">
                    <div className="card-body">
+                     {/* TOKEN HEADER: Name, analyst count, and current price */}
                      <div className="d-flex justify-content-between align-items-start mb-3">
                        <div>
                          <h5 className="card-title mb-1">{token}</h5>
@@ -80,6 +100,7 @@ export default function AnalystsPage() {
                        </div>
                      </div>
 
+                     {/* PRICE CHANGE INDICATORS: 1-hour and 24-hour performance */}
                      <div className="row g-2 mb-3">
                        <div className="col-6">
                          <div className="text-center p-2 bg-light rounded">
@@ -99,6 +120,7 @@ export default function AnalystsPage() {
                        </div>
                      </div>
 
+                     {/* CARD FOOTER: Post count and call-to-action */}
                      <div className="d-flex justify-content-between align-items-center">
                        <small className="text-muted">
                          {tokenPosts.length} analysis post{tokenPosts.length !== 1 ? 's' : ''}
@@ -115,19 +137,22 @@ export default function AnalystsPage() {
          })}
       </div>
 
-      {/* Summary Stats */}
+      {/* PLATFORM STATISTICS: Overview of the entire analyst ecosystem */}
       <div className="row mt-5">
         <div className="col-12">
           <div className="card">
             <div className="card-body">
               <h6 className="card-title text-muted mb-3">Analysis Summary</h6>
               <div className="row text-center">
+                {/* Total tokens being tracked */}
                 <div className="col-md-3">
                   <div className="p-3">
                     <h4 className="text-primary mb-1">{tokens.length}</h4>
                     <small className="text-muted">Tokens Tracked</small>
                   </div>
                 </div>
+
+                {/* Total unique analysts across all tokens */}
                 <div className="col-md-3">
                   <div className="p-3">
                     <h4 className="text-success mb-1">
@@ -136,12 +161,16 @@ export default function AnalystsPage() {
                     <small className="text-muted">Active Analysts</small>
                   </div>
                 </div>
+
+                {/* Total analysis posts in the system */}
                 <div className="col-md-3">
                   <div className="p-3">
                     <h4 className="text-info mb-1">{mockTradingPosts.length}</h4>
                     <small className="text-muted">Total Posts</small>
                   </div>
                 </div>
+
+                {/* Average posts per token */}
                 <div className="col-md-3">
                   <div className="p-3">
                     <h4 className="text-warning mb-1">
@@ -156,7 +185,7 @@ export default function AnalystsPage() {
         </div>
       </div>
 
-      {/* Related Navigation */}
+      {/* CROSS-PAGE NAVIGATION: Link to related features */}
       <div className="row mt-3">
         <div className="col-12">
           <div className="text-center">
