@@ -113,14 +113,14 @@ export default async function TokenAnalysisPage({ params }: TokenPageProps) {
         <div className="col-md-8">
           <div className="card">
             <div className="card-body">
-              <h5 className="card-title">Price Overview</h5>
-              <div className="row">
-                <div className="col-md-4">
-                  <div className="text-center p-3 bg-light rounded">
-                    <h6 className="text-muted mb-1">Current Price</h6>
-                    <div className="h5 mb-0">{formatPrice(priceData.price)}</div>
-                  </div>
-                </div>
+               <h5 className="card-title price-overview-text">Price Overview</h5>
+               <div className="row">
+                 <div className="col-md-4">
+                   <div className="text-center p-3 bg-light rounded">
+                     <h6 className="text-muted mb-1">Current Price</h6>
+                     <div className={`h5 mb-0 ${getPriceClass(priceData.change24h)}`}>{formatPrice(priceData.price)}</div>
+                   </div>
+                 </div>
                 <div className="col-md-4">
                   <div className="text-center p-3 bg-light rounded">
                     <h6 className="text-muted mb-1">1 Hour Change</h6>
@@ -190,12 +190,12 @@ export default async function TokenAnalysisPage({ params }: TokenPageProps) {
                             {post.timestamp.toLocaleDateString()} {post.timestamp.toLocaleTimeString()}
                           </small>
                         </div>
-                        <p className="mb-2">{post.content}</p>
-                        {post.analysis && (
-                          <div className="alert alert-info py-2 px-3 mb-0">
-                            <small><strong>Analysis:</strong> {post.analysis}</small>
-                          </div>
-                        )}
+                         <p className="mb-2 analyst-quote">{post.content}</p>
+                         {post.analysis && (
+                           <div className="alert alert-info py-2 px-3 mb-0">
+                             <small className="analyst-quote"><strong>Analysis:</strong> {post.analysis}</small>
+                           </div>
+                         )}
                       </div>
                     </div>
                   ))}

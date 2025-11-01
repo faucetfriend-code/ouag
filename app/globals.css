@@ -126,9 +126,13 @@ body {
 .text-muted { color: var(--text-muted) !important; }
 .text-dark { color: var(--primary-black) !important; }
 
-.price-positive { color: var(--accent-yellow) !important; }
-.price-negative { color: var(--secondary-red) !important; }
-.price-neutral { color: var(--text-muted) !important; }
+/* Price overview and analyst quotes styling */
+.price-overview-text { color: var(--secondary-red) !important; }
+.analyst-quote { color: var(--secondary-red) !important; }
+
+.price-positive { color: #28a745 !important; } /* Green for positive */
+.price-negative { color: var(--secondary-red) !important; } /* Red for negative */
+.price-neutral { color: var(--text-light) !important; } /* White for neutral */
 
 .bg-light {
   background: var(--medium-gray) !important;
