@@ -24,6 +24,7 @@ interface AuthContextType {
   logout: () => void;
   refreshUser: () => Promise<void>;
   canAccessPremium: () => boolean;
+  grantTestAccess: () => void;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -65,12 +66,26 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     return user?.subscription?.active === true;
   };
 
+  const grantTestAccess = () => {
+    if (user) {
+      setUser({
+        ...user,
+        isServerMember: true,
+        subscription: {
+          active: true,
+          endDate: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000), // 1 year from now
+          plan: 'Test Access'
+        }
+      });
+    }
+  };
+
   useEffect(() => {
     refreshUser().finally(() => setLoading(false));
   }, []);
 
   return (
-    <AuthContext.Provider value={{ user, loading, login, logout, refreshUser, canAccessPremium }}>
+    <AuthContext.Provider value={{ user, loading, login, logout, refreshUser, canAccessPremium, grantTestAccess }}>
       {children}
     </AuthContext.Provider>
   );

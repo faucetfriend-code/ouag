@@ -16,14 +16,8 @@ const totalPortfolioValue = portfolio.reduce((sum, holding) => sum + holding.val
 const totalChange24h = portfolio.reduce((sum, holding) => sum + (holding.value * holding.change24h / 100), 0);
 
 export default function ProfilePage() {
-  const { user, logout, loading } = useAuth();
+  const { user, logout, loading, grantTestAccess } = useAuth();
   const router = useRouter();
-
-  useEffect(() => {
-    if (!loading && !user) {
-      router.push('/login');
-    }
-  }, [user, loading, router]);
 
   if (loading) {
     return (
@@ -39,7 +33,18 @@ export default function ProfilePage() {
   }
 
   if (!user) {
-    return null; // Will redirect to login
+    return (
+      <div className="container mt-4">
+        <div className="text-center">
+          <h1 className="mb-3">Profile</h1>
+          <p className="text-secondary mb-4">Please log in to view your profile information.</p>
+          <button onClick={login} className="btn btn-primary">
+            <i className="bi bi-discord me-2"></i>
+            Login with Discord
+          </button>
+        </div>
+      </div>
+    );
   }
   const getPriceClass = (change: number) => {
     if (change > 0) return 'price-positive';
@@ -95,14 +100,20 @@ export default function ProfilePage() {
                       </p>
                    )}
                  </div>
-                 <div>
-                   {!user.subscription?.active && (
-                     <button className="btn btn-primary">
-                       <i className="bi bi-star me-2"></i>
-                       Subscribe Now
-                     </button>
-                   )}
-                 </div>
+                  <div>
+                    {!user.subscription?.active && (
+                      <div className="d-flex gap-2">
+                        <button className="btn btn-primary" onClick={grantTestAccess}>
+                          <i className="bi bi-star me-2"></i>
+                          Grant Test Access
+                        </button>
+                        <button className="btn btn-outline-primary">
+                          <i className="bi bi-credit-card me-2"></i>
+                          Subscribe Now
+                        </button>
+                      </div>
+                    )}
+                  </div>
                </div>
              </div>
            </div>

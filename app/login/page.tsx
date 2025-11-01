@@ -38,7 +38,7 @@ export default function LoginPage() {
                   <i className="bi bi-discord text-primary" style={{ fontSize: '4rem' }}></i>
                 </div>
 
-                <h2 className="card-title mb-3">Welcome to Unity Oracle</h2>
+                <h2 className="card-title mb-3 text-white">Welcome to Unity Oracle</h2>
                 <p className="text-secondary mb-4">
                   Connect with Discord to access premium crypto analysis and trading insights.
                 </p>
