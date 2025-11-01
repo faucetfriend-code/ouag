@@ -90,7 +90,7 @@ export default function AnalystsPage() {
                      {/* TOKEN HEADER: Name, analyst count, and current price */}
                      <div className="d-flex justify-content-between align-items-start mb-3">
                        <div>
-                         <h5 className="card-title mb-1">{token}</h5>
+                          <h5 className="card-title mb-1 token-name">{token}</h5>
                          <small className="text-muted">
                            {analystCount} analyst{analystCount !== 1 ? 's' : ''}
                          </small>

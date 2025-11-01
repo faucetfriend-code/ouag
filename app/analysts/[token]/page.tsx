@@ -97,7 +97,7 @@ export default async function TokenAnalysisPage({ params }: TokenPageProps) {
               View Summary
             </Link>
           </div>
-          <h1 className="mb-2">{tokenUpper} Analysis</h1>
+          <h1 className="mb-2"><span className="token-name">{tokenUpper}</span> Analysis</h1>
           <p className="text-muted mb-0">Comprehensive analyst insights and technical analysis</p>
         </div>
         <div className="text-end">

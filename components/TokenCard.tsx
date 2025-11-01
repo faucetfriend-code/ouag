@@ -39,7 +39,7 @@ export default function TokenCard({ token, posts }: TokenCardProps) {
     <div className="card mb-4">
       {/* CARD HEADER: Token symbol */}
       <div className="card-header">
-        <h5 className="card-title">{token}</h5>
+        <h5 className="card-title token-name">{token}</h5>
       </div>
 
       <div className="card-body">

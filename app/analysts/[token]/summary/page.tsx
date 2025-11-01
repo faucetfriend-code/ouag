@@ -188,7 +188,7 @@ export default async function TokenSummaryPage({ params }: TokenSummaryPageProps
           </div>
 
           {/* Page title and description */}
-          <h1 className="mb-2">{tokenUpper} Analyst Summary</h1>
+          <h1 className="mb-2"><span className="token-name">{tokenUpper}</span> Analyst Summary</h1>
           <p className="text-muted mb-3">What each analyst has said most about {tokenUpper}</p>
 
           {/* OVERALL SENTIMENT INDICATOR: Big visual showing market consensus */}
@@ -220,7 +220,7 @@ export default async function TokenSummaryPage({ params }: TokenSummaryPageProps
             <div className="card-body">
               <h5 className="card-title text-center mb-3">
                 <i className="bi bi-graph-up me-2"></i>
-                {tokenUpper} Market Sentiment Analysis
+                 <span className="token-name">{tokenUpper}</span> Market Sentiment Analysis
               </h5>
 
               {/* Data source info */}

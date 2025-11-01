@@ -130,6 +130,9 @@ body {
 .price-overview-text { color: var(--secondary-red) !important; }
 .analyst-quote { color: var(--secondary-red) !important; }
 
+/* Token name styling */
+.token-name { color: #d4af37 !important; } /* Dull yellow/gold color */
+
 .price-positive { color: #28a745 !important; } /* Green for positive */
 .price-negative { color: var(--secondary-red) !important; } /* Red for negative */
 .price-neutral { color: var(--text-light) !important; } /* White for neutral */
