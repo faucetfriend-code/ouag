@@ -33,10 +33,10 @@ export default function AnalystsPage() {
   const router = useRouter();
 
   useEffect(() => {
-    if (!loading && (!user || !canAccessPremium())) {
+    if (!loading && !user) {
       router.push('/profile');
     }
-  }, [user, loading, canAccessPremium, router]);
+  }, [user, loading, router]);
 
   if (loading) {
     return (
