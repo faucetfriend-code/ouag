@@ -1,4 +1,9 @@
+'use client';
+
 import Link from 'next/link';
+import { useAuth } from '@/lib/auth-context';
+import { useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 
 const tools = [
   {
@@ -52,6 +57,32 @@ const tools = [
 ];
 
 export default function ToolsPage() {
+  const { user, canAccessPremium, loading } = useAuth();
+  const router = useRouter();
+
+  useEffect(() => {
+    if (!loading && (!user || !canAccessPremium())) {
+      router.push('/profile');
+    }
+  }, [user, loading, canAccessPremium, router]);
+
+  if (loading) {
+    return (
+      <div className="min-vh-100 d-flex align-items-center justify-content-center">
+        <div className="text-center">
+          <div className="spinner-border text-primary" role="status">
+            <span className="visually-hidden">Loading...</span>
+          </div>
+          <p className="mt-2">Loading trading tools...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!user || !canAccessPremium()) {
+    return null; // Will redirect to profile
+  }
+
   return (
     <div className="container mt-4">
       {/* Breadcrumb Navigation */}

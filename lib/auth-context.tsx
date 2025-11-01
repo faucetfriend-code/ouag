@@ -23,6 +23,7 @@ interface AuthContextType {
   login: () => void;
   logout: () => void;
   refreshUser: () => Promise<void>;
+  canAccessPremium: () => boolean;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -60,12 +61,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
+  const canAccessPremium = () => {
+    return user?.subscription?.active === true;
+  };
+
   useEffect(() => {
     refreshUser().finally(() => setLoading(false));
   }, []);
 
   return (
-    <AuthContext.Provider value={{ user, loading, login, logout, refreshUser }}>
+    <AuthContext.Provider value={{ user, loading, login, logout, refreshUser, canAccessPremium }}>
       {children}
     </AuthContext.Provider>
   );

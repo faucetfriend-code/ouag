@@ -5,7 +5,12 @@
  * Each token card links to a detailed summary page showing analyst sentiment.
  */
 
+'use client';
+
 import Link from 'next/link';
+import { useAuth } from '@/lib/auth-context';
+import { useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import { mockTradingPosts, tokens } from '../../data/mockData';
 import { organizeDataByToken } from '../../utils/dataOrganization';
 
@@ -24,6 +29,32 @@ const mockPriceData: Record<string, { price: number; change1h: number; change24h
 };
 
 export default function AnalystsPage() {
+  const { user, canAccessPremium, loading } = useAuth();
+  const router = useRouter();
+
+  useEffect(() => {
+    if (!loading && (!user || !canAccessPremium())) {
+      router.push('/profile');
+    }
+  }, [user, loading, canAccessPremium, router]);
+
+  if (loading) {
+    return (
+      <div className="min-vh-100 d-flex align-items-center justify-content-center">
+        <div className="text-center">
+          <div className="spinner-border text-primary" role="status">
+            <span className="visually-hidden">Loading...</span>
+          </div>
+          <p className="mt-2">Loading analyst insights...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!user || !canAccessPremium()) {
+    return null; // Will redirect to profile
+  }
+
   // Group all trading posts by token for analysis
   const organizedData = organizeDataByToken(mockTradingPosts);
 
