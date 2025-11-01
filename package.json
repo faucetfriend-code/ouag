@@ -14,13 +14,19 @@
     "android:run": "npm run android:build && npx cap run android"
   },
   "dependencies": {
+    "@auth/prisma-adapter": "^2.11.1",
     "@capacitor/android": "^7.4.4",
     "@capacitor/cli": "^7.4.4",
     "@capacitor/core": "^7.4.4",
+    "@prisma/client": "^6.18.0",
     "@types/chart.js": "^2.9.41",
+    "bcryptjs": "^3.0.2",
     "bootstrap": "^5.3.8",
     "chart.js": "^4.5.1",
+    "jsonwebtoken": "^9.0.2",
     "next": "16.0.1",
+    "next-auth": "^4.24.13",
+    "prisma": "^6.18.0",
     "react": "19.2.0",
     "react-chartjs-2": "^5.3.1",
     "react-dom": "19.2.0"

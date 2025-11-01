@@ -5,11 +5,52 @@
  * Displays navigation cards for Profile, Trading Tools, and Analyst Insights.
  */
 
+'use client';
+
 import Link from 'next/link';
+import { useAuth } from '@/lib/auth-context';
 
 export default function Home() {
+  const { user, login, logout, loading } = useAuth();
+
   return (
-    <div className="container mt-5">
+    <>
+      {/* Navigation Header */}
+      <nav className="navbar navbar-expand-lg navbar-dark bg-dark">
+        <div className="container">
+          <Link href="/" className="navbar-brand">
+            <i className="bi bi-graph-up me-2"></i>
+            Unity Oracle
+          </Link>
+
+          <div className="navbar-nav ms-auto">
+            {loading ? (
+              <div className="navbar-text">
+                <div className="spinner-border spinner-border-sm text-light" role="status">
+                  <span className="visually-hidden">Loading...</span>
+                </div>
+              </div>
+            ) : user ? (
+              <div className="navbar-nav">
+                <Link href="/profile" className="nav-link">
+                  <i className="bi bi-person-circle me-1"></i>
+                  {user.username}
+                </Link>
+                <button onClick={logout} className="btn btn-outline-light btn-sm ms-2">
+                  Logout
+                </button>
+              </div>
+            ) : (
+              <button onClick={login} className="btn btn-primary btn-sm">
+                <i className="bi bi-discord me-1"></i>
+                Login
+              </button>
+            )}
+          </div>
+        </div>
+      </nav>
+
+      <div className="container mt-5">
       {/* HERO SECTION: Main branding and feature highlights */}
       <div className="text-center mb-5">
         <h1 className="display-4 fw-bold text-primary mb-3 glow-orange">Unity Oracle Aggregator</h1>
@@ -127,5 +168,6 @@ export default function Home() {
         </div>
       </div>
     </div>
+  </>
   );
 }

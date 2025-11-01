@@ -1,36 +1,76 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Unity Oracle Aggregator
 
-## Getting Started
+A comprehensive crypto trading intelligence platform with Discord authentication and premium subscription features.
 
-First, run the development server:
+## Features
+
+- **Discord Authentication**: Login with Discord and verify server membership
+- **Subscription Management**: Premium features for active subscribers
+- **Analyst Insights**: Detailed crypto analysis from expert traders
+- **Real-time Charts**: Interactive price charts with analyst sentiment
+- **Portfolio Tracking**: Monitor your crypto holdings
+
+## Setup
+
+### Prerequisites
+
+- Node.js 18+
+- Discord Application (for OAuth)
+
+### Discord Setup
+
+1. Go to [Discord Developer Portal](https://discord.com/developers/applications)
+2. Create a new application
+3. Go to OAuth2 settings
+4. Add redirect URI: `http://localhost:3000/api/auth/callback/discord`
+5. Copy Client ID and Client Secret
+
+### Environment Variables
+
+Create a `.env.local` file with:
+
+```env
+DISCORD_CLIENT_ID=your_discord_client_id
+DISCORD_CLIENT_SECRET=your_discord_client_secret
+DISCORD_SERVER_ID=your_discord_server_id
+NEXTAUTH_URL=http://localhost:3000
+NEXTAUTH_SECRET=your_random_secret_here
+```
+
+### Installation
 
 ```bash
+npm install
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
 Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Authentication Flow
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+1. Users login with Discord OAuth
+2. System verifies they are members of the specified Discord server
+3. Users with active subscriptions can access premium features
+4. Users without subscriptions are redirected to profile page with subscription options
 
-## Learn More
+## Access Control
 
-To learn more about Next.js, take a look at the following resources:
+- **Public Routes**: `/`, `/login`
+- **Authenticated Routes**: `/profile`
+- **Premium Routes**: `/analysts`, `/tools` (require active subscription)
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## Development
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+```bash
+npm run dev      # Start development server
+npm run build    # Build for production
+npm run lint     # Run ESLint
+```
 
-## Deploy on Vercel
+## Architecture
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+- **Frontend**: Next.js 14 with TypeScript
+- **Authentication**: NextAuth.js with Discord OAuth
+- **Styling**: Bootstrap 5
+- **Charts**: Chart.js with react-chartjs-2
+- **State Management**: React Context API

@@ -1,13 +1,9 @@
-import Link from 'next/link';
+'use client';
 
-// Mock user data
-const userProfile = {
-  name: 'Alex Thompson',
-  email: 'alex.thompson@example.com',
-  joinDate: 'January 2024',
-  avatar: 'AT',
-  bio: 'Passionate crypto trader and analyst with 3+ years of experience in technical analysis and DeFi.'
-};
+import Link from 'next/link';
+import { useAuth } from '@/lib/auth-context';
+import { useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 
 const portfolio = [
   { token: 'BTC', amount: 0.5, value: 29375, change24h: 2.34 },
@@ -20,6 +16,31 @@ const totalPortfolioValue = portfolio.reduce((sum, holding) => sum + holding.val
 const totalChange24h = portfolio.reduce((sum, holding) => sum + (holding.value * holding.change24h / 100), 0);
 
 export default function ProfilePage() {
+  const { user, logout, loading } = useAuth();
+  const router = useRouter();
+
+  useEffect(() => {
+    if (!loading && !user) {
+      router.push('/login');
+    }
+  }, [user, loading, router]);
+
+  if (loading) {
+    return (
+      <div className="min-vh-100 d-flex align-items-center justify-content-center">
+        <div className="text-center">
+          <div className="spinner-border text-primary" role="status">
+            <span className="visually-hidden">Loading...</span>
+          </div>
+          <p className="mt-2">Loading profile...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!user) {
+    return null; // Will redirect to login
+  }
   const getPriceClass = (change: number) => {
     if (change > 0) return 'price-positive';
     if (change < 0) return 'price-negative';
@@ -47,32 +68,84 @@ export default function ProfilePage() {
         </ol>
       </nav>
 
-      <div className="mb-4">
-        <h1 className="mb-2">Profile</h1>
-        <p className="text-muted mb-0">Manage your account, portfolio, and trading preferences</p>
-      </div>
+       <div className="mb-4">
+         <h1 className="mb-2">Profile</h1>
+         <p className="text-muted mb-0">Manage your account, portfolio, and trading preferences</p>
+       </div>
+
+       {/* Subscription Status */}
+       <div className="row mb-4">
+         <div className="col-12">
+           <div className={`card ${user.subscription?.active ? 'border-success' : 'border-warning'}`}>
+             <div className="card-body">
+               <div className="d-flex justify-content-between align-items-center">
+                 <div>
+                   <h5 className="card-title mb-1">
+                     <i className={`bi ${user.subscription?.active ? 'bi-check-circle-fill text-success' : 'bi-exclamation-triangle-fill text-warning'} me-2`}></i>
+                     {user.subscription?.active ? 'Premium Subscription Active' : 'No Active Subscription'}
+                   </h5>
+                   {user.subscription?.active && user.subscription.endDate && (
+                     <p className="text-muted mb-0">
+                       Expires: {new Date(user.subscription.endDate).toLocaleDateString()}
+                     </p>
+                   )}
+                   {!user.subscription?.active && (
+                     <p className="text-muted mb-0">
+                       Subscribe to access premium features and analyst insights.
+                     </p>
+                   )}
+                 </div>
+                 <div>
+                   {!user.subscription?.active && (
+                     <button className="btn btn-primary">
+                       <i className="bi bi-star me-2"></i>
+                       Subscribe Now
+                     </button>
+                   )}
+                 </div>
+               </div>
+             </div>
+           </div>
+         </div>
+       </div>
 
       <div className="row">
-        {/* Profile Information */}
-        <div className="col-lg-4 mb-4">
-          <div className="card">
-            <div className="card-body text-center">
-              <div className="mb-3">
-                <div className="bg-primary text-white rounded-circle d-inline-flex align-items-center justify-content-center"
-                     style={{ width: '80px', height: '80px', fontSize: '2rem', fontWeight: 'bold' }}>
-                  {userProfile.avatar}
-                </div>
-              </div>
-              <h5 className="card-title mb-1">{userProfile.name}</h5>
-              <p className="text-muted small mb-2">{userProfile.email}</p>
-              <p className="text-muted small mb-3">Member since {userProfile.joinDate}</p>
-              <p className="card-text small">{userProfile.bio}</p>
-              <button className="btn btn-outline-primary btn-sm w-100" disabled>
-                <i className="bi bi-pencil me-2"></i>
-                Edit Profile
-              </button>
-            </div>
-          </div>
+         {/* Profile Information */}
+         <div className="col-lg-4 mb-4">
+           <div className="card">
+             <div className="card-body text-center">
+               <div className="mb-3">
+                 {user.avatar ? (
+                   <img
+                     src={`https://cdn.discordapp.com/avatars/${user.discordId}/${user.avatar}.png`}
+                     alt="Discord Avatar"
+                     className="rounded-circle"
+                     style={{ width: '80px', height: '80px' }}
+                   />
+                 ) : (
+                   <div className="bg-primary text-white rounded-circle d-inline-flex align-items-center justify-content-center"
+                        style={{ width: '80px', height: '80px', fontSize: '2rem', fontWeight: 'bold' }}>
+                     {user.username.charAt(0).toUpperCase()}
+                   </div>
+                 )}
+               </div>
+               <h5 className="card-title mb-1">{user.username}#{user.discriminator}</h5>
+               {user.email && <p className="text-muted small mb-2">{user.email}</p>}
+               <div className="mb-3">
+                 <span className={`badge ${user.isServerMember ? 'bg-success' : 'bg-danger'}`}>
+                   <i className={`bi ${user.isServerMember ? 'bi-check-circle' : 'bi-x-circle'} me-1`}></i>
+                   {user.isServerMember ? 'Server Member' : 'Not a Member'}
+                 </span>
+               </div>
+               <p className="card-text small text-muted">
+                 Discord user connected and verified.
+               </p>
+               <button onClick={logout} className="btn btn-outline-danger btn-sm w-100">
+                 <i className="bi bi-box-arrow-right me-2"></i>
+                 Logout
+               </button>
+             </div>
+           </div>
 
           {/* Account Settings */}
           <div className="card mt-3">

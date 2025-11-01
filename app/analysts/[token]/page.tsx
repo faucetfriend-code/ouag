@@ -142,9 +142,9 @@ export default async function TokenAnalysisPage({ params }: TokenPageProps) {
           </div>
         </div>
         <div className="col-md-4">
-          <div className="card">
-            <div className="card-body">
-              <h6 className="card-title">Analysis Summary</h6>
+             <div className="card">
+               <div className="card-body">
+               <h6 className="card-title" style={{ color: 'white' }}>Analysis Summary</h6>
               <div className="mb-2">
                 <small className="text-muted">Total Posts:</small>
                 <span className="float-end fw-bold">{tokenPosts.length}</span>
