@@ -16,7 +16,7 @@ const totalPortfolioValue = portfolio.reduce((sum, holding) => sum + holding.val
 const totalChange24h = portfolio.reduce((sum, holding) => sum + (holding.value * holding.change24h / 100), 0);
 
 export default function ProfilePage() {
-  const { user, logout, loading, grantTestAccess } = useAuth();
+  const { user, login, logout, loading, grantTestAccess } = useAuth();
   const router = useRouter();
 
   if (loading) {
