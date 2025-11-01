@@ -30,8 +30,24 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
-  const [user, setUser] = useState<User | null>(null);
-  const [loading, setLoading] = useState(true);
+  // Test user for development
+  const testUser: User = {
+    id: 'test-doom',
+    discordId: '123456789',
+    username: 'Doom',
+    discriminator: '0001',
+    avatar: null,
+    email: 'doom@test.com',
+    isServerMember: true,
+    subscription: {
+      active: true,
+      endDate: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000), // 1 year
+      plan: 'Test Access'
+    }
+  };
+
+  const [user, setUser] = useState<User | null>(testUser);
+  const [loading, setLoading] = useState(false);
 
   const refreshUser = async () => {
     try {
@@ -80,9 +96,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
-  useEffect(() => {
-    refreshUser().finally(() => setLoading(false));
-  }, []);
+  // Disabled refreshUser for test user
+  // useEffect(() => {
+  //   refreshUser().finally(() => setLoading(false));
+  // }, []);
 
   return (
     <AuthContext.Provider value={{ user, loading, login, logout, refreshUser, canAccessPremium, grantTestAccess }}>
