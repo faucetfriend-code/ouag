@@ -160,6 +160,44 @@ export default function Home() {
             </div>
           </div>
         </div>
+
+        {/* NEWS FEED CARD: Latest crypto news and updates */}
+        <div className="col-lg-6 col-md-6">
+          <div className="card h-100 shadow-sm hover-card">
+            <div className="card-body text-center">
+              <div className="mb-3">
+                <i className="bi bi-newspaper display-4 text-success pulse-green"></i>
+              </div>
+              <h5 className="card-title">News Feed</h5>
+              <p className="card-text text-secondary">
+                Stay updated with the latest cryptocurrency news, market developments, and breaking stories.
+              </p>
+              <Link href="/news" className="btn btn-success">
+                <i className="bi bi-arrow-right-circle me-2"></i>
+                Read News
+              </Link>
+            </div>
+          </div>
+        </div>
+
+        {/* AIRDROP GUIDE CARD: Crypto airdrops and opportunities */}
+        <div className="col-lg-6 col-md-6">
+          <div className="card h-100 shadow-sm hover-card">
+            <div className="card-body text-center">
+              <div className="mb-3">
+                <i className="bi bi-gift display-4 text-danger pulse-red"></i>
+              </div>
+              <h5 className="card-title">Airdrop Guide</h5>
+              <p className="card-text text-secondary">
+                Discover active and upcoming airdrops, eligibility criteria, and step-by-step claim instructions.
+              </p>
+              <Link href="/airdrops" className="btn btn-danger">
+                <i className="bi bi-arrow-right-circle me-2"></i>
+                View Airdrops
+              </Link>
+            </div>
+          </div>
+        </div>
       </div>
 
       {/* PLATFORM STATISTICS: Key metrics showcasing platform value */}

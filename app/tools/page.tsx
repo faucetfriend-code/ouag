@@ -2,8 +2,9 @@
 
 import Link from 'next/link';
 import { useAuth } from '@/lib/auth-context';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { getTopMovers, getFundingRates, type TopMover, type FundingRate } from '@/lib/toolsData';
 
 const tools = [
   {
@@ -59,12 +60,36 @@ const tools = [
 export default function ToolsPage() {
   const { user, canAccessPremium, loading } = useAuth();
   const router = useRouter();
+  const [topMovers, setTopMovers] = useState<TopMover[]>([]);
+  const [fundingRates, setFundingRates] = useState<FundingRate[]>([]);
+  const [dataLoading, setDataLoading] = useState(true);
 
   useEffect(() => {
     if (!loading && !user) {
       router.push('/profile');
     }
   }, [user, loading, router]);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const [movers, rates] = await Promise.all([
+          getTopMovers(8),
+          getFundingRates()
+        ]);
+        setTopMovers(movers);
+        setFundingRates(rates);
+      } catch (error) {
+        console.error('Error fetching tools data:', error);
+      } finally {
+        setDataLoading(false);
+      }
+    };
+
+    if (user) {
+      fetchData();
+    }
+  }, [user]);
 
   if (loading) {
     return (
@@ -100,6 +125,9 @@ export default function ToolsPage() {
       <div className="mb-4">
         <h1 className="mb-2">Trading Tools</h1>
         <p className="text-secondary mb-0">Essential tools for informed cryptocurrency trading decisions</p>
+        <small className="text-warning d-block mt-2">
+          📝 Using mock data - Will connect to tools workflow + database
+        </small>
       </div>
 
       <div className="row g-4">
@@ -133,40 +161,114 @@ export default function ToolsPage() {
         ))}
       </div>
 
-      {/* Market Overview Section */}
+      {/* Top Movers Section */}
       <div className="row mt-5">
         <div className="col-12">
           <div className="card">
             <div className="card-header">
-              <h5 className="mb-0">Market Overview</h5>
+              <h5 className="mb-0">
+                <i className="bi bi-graph-up me-2"></i>
+                Top Movers (24h)
+              </h5>
             </div>
             <div className="card-body">
-              <div className="row text-center">
-                <div className="col-md-3">
-                  <div className="p-3">
-                    <h4 className="text-success mb-1">$1.2T</h4>
-                     <small className="text-secondary">Total Market Cap</small>
+              {dataLoading ? (
+                <div className="text-center py-4">
+                  <div className="spinner-border spinner-border-sm text-primary" role="status">
+                    <span className="visually-hidden">Loading...</span>
                   </div>
+                  <p className="mt-2 mb-0 small text-secondary">Loading market data...</p>
                 </div>
-                <div className="col-md-3">
-                  <div className="p-3">
-                    <h4 className="text-primary mb-1">$45B</h4>
-                     <small className="text-secondary">24h Volume</small>
+              ) : (
+                <div className="table-responsive">
+                  <table className="table table-hover">
+                    <thead>
+                      <tr>
+                        <th>Token</th>
+                        <th className="text-end">Price</th>
+                        <th className="text-end">24h Change</th>
+                        <th className="text-end">Volume</th>
+                        <th className="text-end">Market Cap</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {topMovers.map((mover) => (
+                        <tr key={mover.symbol}>
+                          <td>
+                            <strong>{mover.token}</strong>
+                            <br />
+                            <small className="text-muted">{mover.symbol}</small>
+                          </td>
+                          <td className="text-end">
+                            ${mover.price.toLocaleString()}
+                          </td>
+                          <td className={`text-end ${mover.change24h >= 0 ? 'text-success' : 'text-danger'}`}>
+                            <i className={`bi bi-arrow-${mover.change24h >= 0 ? 'up' : 'down'} me-1`}></i>
+                            {mover.change24h >= 0 ? '+' : ''}{mover.change24h.toFixed(2)}%
+                          </td>
+                          <td className="text-end">
+                            ${(mover.volume24h / 1000000000).toFixed(2)}B
+                          </td>
+                          <td className="text-end">
+                            ${(mover.marketCap / 1000000000).toFixed(2)}B
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Funding Rates Section */}
+      <div className="row mt-4">
+        <div className="col-12">
+          <div className="card">
+            <div className="card-header">
+              <h5 className="mb-0">
+                <i className="bi bi-cash-stack me-2"></i>
+                Funding Rates
+              </h5>
+            </div>
+            <div className="card-body">
+              {dataLoading ? (
+                <div className="text-center py-4">
+                  <div className="spinner-border spinner-border-sm text-primary" role="status">
+                    <span className="visually-hidden">Loading...</span>
                   </div>
+                  <p className="mt-2 mb-0 small text-secondary">Loading funding rates...</p>
                 </div>
-                <div className="col-md-3">
-                  <div className="p-3">
-                    <h4 className="text-info mb-1">BTC 52%</h4>
-                     <small className="text-secondary">BTC Dominance</small>
-                  </div>
+              ) : (
+                <div className="row g-3">
+                  {fundingRates.map((rate, index) => (
+                    <div key={index} className="col-md-6 col-lg-4">
+                      <div className="border rounded p-3">
+                        <div className="d-flex justify-content-between align-items-start mb-2">
+                          <div>
+                            <h6 className="mb-0">{rate.token}</h6>
+                            <small className="text-muted">{rate.exchange}</small>
+                          </div>
+                          <span className={`badge ${rate.rate >= 0 ? 'bg-success' : 'bg-danger'}`}>
+                            {(rate.rate * 100).toFixed(3)}%
+                          </span>
+                        </div>
+                        <div className="d-flex justify-content-between align-items-center">
+                          <small className="text-secondary">
+                            <i className="bi bi-clock me-1"></i>
+                            Next: {new Date(rate.nextFunding).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                          </small>
+                          <small className="text-muted">
+                            Pred: {(rate.predictedRate * 100).toFixed(3)}%
+                          </small>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
                 </div>
-                <div className="col-md-3">
-                  <div className="p-3">
-                    <h4 className="text-warning mb-1">1,847</h4>
-                     <small className="text-secondary">Active Cryptos</small>
-                  </div>
-                </div>
-              </div>
+              )}
             </div>
           </div>
         </div>

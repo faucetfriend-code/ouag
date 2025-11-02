@@ -1,6 +1,6 @@
  import Link from 'next/link';
  import { notFound } from 'next/navigation';
-import { getTradingPostsByToken, getAllTokens } from '../../../../lib/dataSource';
+import { getTradingPostsByToken, getAllTokens } from '../../../../lib/analystDataSource';
 import { organizeDataByToken } from '../../../../utils/dataOrganization';
 
 interface TokenSummaryPageProps {

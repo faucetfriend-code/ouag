@@ -7,7 +7,7 @@
 
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
-import { getTradingPostsByToken, getAllTokens, getAnalystStats } from '../../lib/dataSource';
+import { getTradingPostsByToken, getAllTokens, getAnalystStats } from '../../lib/analystDataSource';
 import { organizeDataByToken } from '../../utils/dataOrganization';
 import { ProcessedPost } from '../../lib/workflow';
 
