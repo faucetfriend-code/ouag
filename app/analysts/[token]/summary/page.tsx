@@ -259,7 +259,11 @@ export default async function TokenSummaryPage({ params }: TokenSummaryPageProps
                   return (
                     <div key={analyst} className="col-md-3 mb-3">
                       <div className="p-3 bg-dark rounded">
-                        <h6 className="mb-2">{analyst}</h6>
+                        <h6 className="mb-2">
+                          <Link href={`/profile/analyst/${analyst}`} className="text-decoration-none text-primary">
+                            {analyst}
+                          </Link>
+                        </h6>
                         <span className={`badge ${getSentimentBadge(sentiment)} mb-2`}>
                           {sentiment.toUpperCase()}
                         </span>
@@ -287,7 +291,9 @@ export default async function TokenSummaryPage({ params }: TokenSummaryPageProps
                  <div className="card-header d-flex justify-content-between align-items-center">
                    <h5 className="mb-0">
                      <i className="bi bi-person-circle me-2"></i>
-                     {analyst}
+                     <Link href={`/profile/analyst/${analyst}`} className="text-decoration-none text-primary">
+                       {analyst}
+                     </Link>
                    </h5>
                    <div className="d-flex align-items-center gap-2">
                      <span className={`badge ${getSentimentBadge(sentiment)}`}>

@@ -178,7 +178,9 @@ export default async function TokenAnalysisPage({ params }: TokenPageProps) {
               <div className="card-header bg-light">
                 <h5 className="mb-0">
                   <i className="bi bi-person-circle me-2"></i>
-                  {analyst}
+                  <Link href={`/profile/analyst/${analyst}`} className="text-decoration-none text-primary">
+                    {analyst}
+                  </Link>
                    <small className="text-secondary ms-2">({posts.length} post{posts.length !== 1 ? 's' : ''})</small>
                 </h5>
               </div>

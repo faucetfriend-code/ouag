@@ -2,6 +2,7 @@ import type { Metadata } from 'next'
 import 'bootstrap/dist/css/bootstrap.min.css'
 import './globals.css'
 import { AuthProvider } from '@/lib/auth-context'
+import { UserPreferencesProvider } from '@/lib/user-preferences-context'
 import { LoadingProvider } from '@/lib/loading-context'
 import ErrorBoundary from '@/components/ErrorBoundary'
 import GlobalLoadingSpinner from '@/components/GlobalLoadingSpinner'
@@ -24,10 +25,12 @@ export default function RootLayout({
         <ErrorBoundary>
           <LoadingProvider>
             <AuthProvider>
-              {children}
-              <GlobalLoadingSpinner />
-              <ToastProvider />
-              <OfflineIndicator />
+              <UserPreferencesProvider>
+                {children}
+                <GlobalLoadingSpinner />
+                <ToastProvider />
+                <OfflineIndicator />
+              </UserPreferencesProvider>
             </AuthProvider>
           </LoadingProvider>
         </ErrorBoundary>

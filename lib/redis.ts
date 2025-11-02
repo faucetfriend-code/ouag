@@ -330,6 +330,31 @@ class RedisService {
       return false;
     }
   }
+
+  /**
+   * GENERIC DATA STORAGE METHODS
+   * For storing arbitrary key-value data
+   */
+
+  async set(key: string, value: string): Promise<void> {
+    await this.connect();
+    await this.client.set(key, value);
+  }
+
+  async get(key: string): Promise<string | null> {
+    await this.connect();
+    return await this.client.get(key);
+  }
+
+  async del(key: string): Promise<void> {
+    await this.connect();
+    await this.client.del(key);
+  }
+
+  async keys(pattern: string): Promise<string[]> {
+    await this.connect();
+    return await this.client.keys(pattern);
+  }
 }
 
 // Export singleton instance

@@ -2,8 +2,10 @@
 
 import Link from 'next/link';
 import { useAuth } from '@/lib/auth-context';
-import { useEffect } from 'react';
+import { useUserPreferences } from '@/lib/user-preferences-context';
+import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
+import RecentActivityFeed from '@/components/RecentActivityFeed';
 
 const portfolio = [
   { token: 'BTC', amount: 0.5, value: 29375, change24h: 2.34 },
@@ -17,7 +19,9 @@ const totalChange24h = portfolio.reduce((sum, holding) => sum + (holding.value *
 
 export default function ProfilePage() {
   const { user, login, logout, loading, grantTestAccess } = useAuth();
+  const { preferences, updateTradingPreferences, updateNotificationSettings, updateAnalysisPreferences, savePreferences, unfavoriteAnalyst } = useUserPreferences();
   const router = useRouter();
+  const [saveStatus, setSaveStatus] = useState<'idle' | 'saving' | 'saved' | 'error'>('idle');
 
   if (loading) {
     return (
@@ -57,6 +61,19 @@ export default function ProfilePage() {
       style: 'currency',
       currency: 'USD'
     }).format(amount);
+  };
+
+  const handleSavePreferences = async () => {
+    setSaveStatus('saving');
+    try {
+      await savePreferences();
+      setSaveStatus('saved');
+      setTimeout(() => setSaveStatus('idle'), 3000);
+    } catch (error) {
+      console.error('Error saving preferences:', error);
+      setSaveStatus('error');
+      setTimeout(() => setSaveStatus('idle'), 3000);
+    }
   };
 
   return (
@@ -248,29 +265,49 @@ export default function ProfilePage() {
 
           {/* Trading Preferences */}
           <div className="card mb-4">
-            <div className="card-header">
+            <div className="card-header d-flex justify-content-between align-items-center">
               <h5 className="mb-0">Trading Preferences</h5>
+              {saveStatus === 'saved' && (
+                <small className="text-success">
+                  <i className="bi bi-check-circle me-1"></i>
+                  Saved!
+                </small>
+              )}
+              {saveStatus === 'error' && (
+                <small className="text-danger">
+                  <i className="bi bi-x-circle me-1"></i>
+                  Error saving
+                </small>
+              )}
             </div>
             <div className="card-body">
               <div className="row">
                 <div className="col-md-6">
                   <h6>Risk Tolerance</h6>
                   <div className="mb-3">
-                    <select className="form-select" disabled>
-                      <option>Conservative</option>
-                      <option>Moderate</option>
-                      <option>Aggressive</option>
+                    <select
+                      className="form-select"
+                      value={preferences?.tradingPreferences.riskTolerance || 'Moderate'}
+                      onChange={(e) => updateTradingPreferences({ riskTolerance: e.target.value as any })}
+                    >
+                      <option value="Conservative">Conservative</option>
+                      <option value="Moderate">Moderate</option>
+                      <option value="Aggressive">Aggressive</option>
                     </select>
                   </div>
                 </div>
                 <div className="col-md-6">
                   <h6>Default Timeframe</h6>
                   <div className="mb-3">
-                    <select className="form-select" disabled>
-                      <option>1 Hour</option>
-                      <option>4 Hours</option>
-                      <option>1 Day</option>
-                      <option>1 Week</option>
+                    <select
+                      className="form-select"
+                      value={preferences?.tradingPreferences.defaultTimeframe || '1d'}
+                      onChange={(e) => updateTradingPreferences({ defaultTimeframe: e.target.value as any })}
+                    >
+                      <option value="1h">1 Hour</option>
+                      <option value="4h">4 Hours</option>
+                      <option value="1d">1 Day</option>
+                      <option value="1w">1 Week</option>
                     </select>
                   </div>
                 </div>
@@ -280,13 +317,23 @@ export default function ProfilePage() {
                 <div className="col-md-6">
                   <h6>Notification Settings</h6>
                   <div className="form-check">
-                    <input className="form-check-input" type="checkbox" disabled />
+                    <input
+                      className="form-check-input"
+                      type="checkbox"
+                      checked={preferences?.notificationSettings.priceAlerts || false}
+                      onChange={(e) => updateNotificationSettings({ priceAlerts: e.target.checked })}
+                    />
                     <label className="form-check-label small">
                       Price alerts for portfolio assets
                     </label>
                   </div>
                   <div className="form-check">
-                    <input className="form-check-input" type="checkbox" disabled />
+                    <input
+                      className="form-check-input"
+                      type="checkbox"
+                      checked={preferences?.notificationSettings.analystInsights || false}
+                      onChange={(e) => updateNotificationSettings({ analystInsights: e.target.checked })}
+                    />
                     <label className="form-check-label small">
                       New analyst insights
                     </label>
@@ -295,51 +342,127 @@ export default function ProfilePage() {
                 <div className="col-md-6">
                   <h6>Analysis Preferences</h6>
                   <div className="form-check">
-                    <input className="form-check-input" type="checkbox" disabled defaultChecked />
+                    <input
+                      className="form-check-input"
+                      type="checkbox"
+                      checked={preferences?.analysisPreferences.technicalAnalysis !== false}
+                      onChange={(e) => updateAnalysisPreferences({ technicalAnalysis: e.target.checked })}
+                    />
                     <label className="form-check-label small">
                       Technical analysis
                     </label>
                   </div>
                   <div className="form-check">
-                    <input className="form-check-input" type="checkbox" disabled defaultChecked />
+                    <input
+                      className="form-check-input"
+                      type="checkbox"
+                      checked={preferences?.analysisPreferences.fundamentalAnalysis !== false}
+                      onChange={(e) => updateAnalysisPreferences({ fundamentalAnalysis: e.target.checked })}
+                    />
                     <label className="form-check-label small">
                       Fundamental analysis
                     </label>
                   </div>
                 </div>
               </div>
+
+              <div className="row mt-3">
+                <div className="col-12">
+                  <button
+                    className="btn btn-primary"
+                    onClick={handleSavePreferences}
+                    disabled={saveStatus === 'saving'}
+                  >
+                    {saveStatus === 'saving' ? (
+                      <>
+                        <span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                        Saving...
+                      </>
+                    ) : (
+                      <>
+                        <i className="bi bi-save me-2"></i>
+                        Save Preferences
+                      </>
+                    )}
+                  </button>
+                  <small className="text-secondary ms-3">
+                    Changes are auto-saved, or click to save immediately
+                  </small>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Followed Analysts */}
+          <div className="card mb-4">
+            <div className="card-header">
+              <h5 className="mb-0">
+                <i className="bi bi-heart-fill me-2"></i>
+                Followed Analysts
+              </h5>
+            </div>
+            <div className="card-body">
+              {!preferences || preferences.favoriteAnalysts.length === 0 ? (
+                <div className="text-center text-secondary py-4">
+                  <i className="bi bi-heart display-4 mb-3 d-block"></i>
+                  <p className="mb-0">You're not following any analysts yet.</p>
+                  <small>Visit the <Link href="/analysts" className="text-primary">Analysts page</Link> to discover and follow analysts.</small>
+                </div>
+              ) : (
+                <div className="row g-3">
+                  {preferences.favoriteAnalysts.map((analystUsername) => (
+                    <div key={analystUsername} className="col-md-6">
+                      <div className="card h-100 hover-card">
+                        <div className="card-body">
+                          <div className="d-flex justify-content-between align-items-start">
+                            <div className="d-flex align-items-center">
+                              <div className="bg-primary text-white rounded-circle d-flex align-items-center justify-content-center me-3"
+                                   style={{ width: '40px', height: '40px', fontSize: '1.2rem', fontWeight: 'bold' }}>
+                                {analystUsername.charAt(0).toUpperCase()}
+                              </div>
+                              <div>
+                                <h6 className="mb-0">@{analystUsername}</h6>
+                                <small className="text-secondary">Crypto Analyst</small>
+                              </div>
+                            </div>
+                            <div>
+                              <button
+                                className="btn btn-sm btn-outline-danger"
+                                onClick={() => preferences && unfavoriteAnalyst(analystUsername)}
+                                title="Unfollow"
+                              >
+                                <i className="bi bi-heart-fill"></i>
+                              </button>
+                            </div>
+                          </div>
+                          <div className="mt-3">
+                            <Link
+                              href={`/profile/analyst/${analystUsername}`}
+                              className="btn btn-sm btn-outline-primary w-100"
+                            >
+                              <i className="bi bi-person me-1"></i>
+                              View Profile
+                            </Link>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
           </div>
 
           {/* Recent Activity */}
           <div className="card">
             <div className="card-header">
-              <h5 className="mb-0">Recent Activity</h5>
+              <h5 className="mb-0">
+                <i className="bi bi-clock-history me-2"></i>
+                Recent Activity from Followed Analysts
+              </h5>
             </div>
             <div className="card-body">
-              <div className="timeline">
-                <div className="timeline-item mb-3">
-                  <div className="timeline-marker bg-success"></div>
-                  <div className="timeline-content">
-                    <small className="text-secondary">2 hours ago</small>
-                    <div>Viewed BTC analysis from btc_analyst1</div>
-                  </div>
-                </div>
-                <div className="timeline-item mb-3">
-                  <div className="timeline-marker bg-info"></div>
-                  <div className="timeline-content">
-                    <small className="text-secondary">1 day ago</small>
-                    <div>Updated portfolio holdings</div>
-                  </div>
-                </div>
-                <div className="timeline-item">
-                  <div className="timeline-marker bg-primary"></div>
-                  <div className="timeline-content">
-                    <small className="text-secondary">3 days ago</small>
-                    <div>Joined Unity Oracle Aggregator</div>
-                  </div>
-                </div>
-              </div>
+              <RecentActivityFeed />
             </div>
           </div>
         </div>
