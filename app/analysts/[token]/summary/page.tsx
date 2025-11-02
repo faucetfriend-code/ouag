@@ -1,6 +1,6 @@
  import Link from 'next/link';
  import { notFound } from 'next/navigation';
-import { mockTradingPosts, tokens } from '../../../../data/mockData';
+import { getTradingPostsByToken, getAllTokens } from '../../../../lib/dataSource';
 import { organizeDataByToken } from '../../../../utils/dataOrganization';
 
 interface TokenSummaryPageProps {
@@ -16,14 +16,14 @@ export default async function TokenSummaryPage({ params }: TokenSummaryPageProps
   // Convert token to uppercase for consistent data access
   const tokenUpper = token.toUpperCase();
 
-  // Validate that the token exists in our supported list
+  // Get tokens list and validate
+  const tokens = await getAllTokens();
   if (!tokens.includes(tokenUpper)) {
     notFound();
   }
 
-  // Get all trading posts and filter for this specific token
-  const organizedData = organizeDataByToken(mockTradingPosts);
-  const tokenPosts = organizedData[tokenUpper] || [];
+  // Get trading posts for this specific token
+  const tokenPosts = await getTradingPostsByToken(tokenUpper);
 
   /**
    * ANALYST DATA PROCESSING
@@ -401,7 +401,8 @@ export default async function TokenSummaryPage({ params }: TokenSummaryPageProps
  * Pre-generate summary pages for all supported tokens at build time
  */
 export async function generateStaticParams() {
-  return tokens.map((token) => ({
+  const allTokens = await getAllTokens();
+  return allTokens.map((token) => ({
     token: token.toLowerCase(), // URL parameters are lowercase
   }));
 }

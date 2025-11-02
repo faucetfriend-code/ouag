@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
-import { mockTradingPosts, tokens } from '../../../data/mockData';
+import { getTradingPostsByToken, getAllTokens } from '../../../lib/dataSource';
 import { organizeDataByToken } from '../../../utils/dataOrganization';
 import TokenCard from '../../../components/TokenCard';
 
@@ -30,13 +30,16 @@ export default async function TokenAnalysisPage({ params }: TokenPageProps) {
   // Convert token to uppercase for consistency
   const tokenUpper = token.toUpperCase();
 
+  // Get tokens list
+  const tokens = await getAllTokens();
+
   // Validate token exists
   if (!tokens.includes(tokenUpper)) {
     notFound();
   }
 
-  const organizedData = organizeDataByToken(mockTradingPosts);
-  const tokenPosts = organizedData[tokenUpper] || [];
+  // Fetch posts for this token
+  const tokenPosts = await getTradingPostsByToken(tokenUpper);
   const priceData = mockPriceData[tokenUpper];
 
   const getPriceClass = (change: number) => {
@@ -227,7 +230,8 @@ export default async function TokenAnalysisPage({ params }: TokenPageProps) {
 
 // Generate static params for all tokens
 export async function generateStaticParams() {
-  return tokens.map((token) => ({
+  const allTokens = await getAllTokens();
+  return allTokens.map((token) => ({
     token: token.toLowerCase(),
   }));
 }

@@ -9,6 +9,60 @@ export interface TradingPost {
   chartData?: number[];
 }
 
+// Redis-based data fetching functions (Server-side only)
+import 'server-only';
+import { redisService } from '../lib/redis';
+
+export async function getTradingPostsByToken(token: string): Promise<TradingPost[]> {
+  try {
+    const posts = await redisService.getPostsByToken(token);
+    return posts.map(post => ({
+      id: post.id,
+      user: post.user,
+      channel: post.channel,
+      token: post.token,
+      content: post.content,
+      timestamp: post.timestamp,
+      analysis: post.analysis,
+      chartData: post.chartData
+    }));
+  } catch (error) {
+    console.error('Error fetching posts from Redis:', error);
+    // Fallback to mock data
+    return mockTradingPosts.filter(post => post.token === token);
+  }
+}
+
+export async function getChartDataForToken(token: string): Promise<number[] | undefined> {
+  try {
+    return await redisService.getChartData(token) || undefined;
+  } catch (error) {
+    console.error('Error fetching chart data from Redis:', error);
+    // Fallback to mock data
+    const tokenPosts = mockTradingPosts.filter(post => post.token === token);
+    return tokenPosts.find(post => post.chartData)?.chartData;
+  }
+}
+
+export async function getAllTokens(): Promise<string[]> {
+  return tokens; // Static list for now
+}
+
+export async function getAnalystStats() {
+  try {
+    return await redisService.getAnalystStats();
+  } catch (error) {
+    console.error('Error fetching analyst stats from Redis:', error);
+    // Fallback stats
+    return {
+      totalPosts: mockTradingPosts.length,
+      activeAnalysts: new Set(mockTradingPosts.map(p => p.user)).size,
+      tokensTracked: tokens.length,
+      latestUpdate: new Date()
+    };
+  }
+}
+
 export const mockTradingPosts: TradingPost[] = [
   // BTC-Focused Analysts (3 users, mainly BTC)
   {
