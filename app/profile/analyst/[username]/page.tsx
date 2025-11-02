@@ -206,13 +206,13 @@ export default async function AnalystProfilePage({ params }: AnalystProfilePageP
                         </p>
                       </div>
                     )}
-                    <Link
-                      href={`/analysts/${token.toLowerCase()}`}
-                      className="btn btn-outline-primary btn-sm w-100"
-                    >
-                      <i className="bi bi-arrow-right me-1"></i>
-                      View All {token} Analysis
-                    </Link>
+                     <Link
+                       href={`/analysts/${token.toLowerCase()}/posts`}
+                       className="btn btn-outline-primary btn-sm w-100"
+                     >
+                       <i className="bi bi-arrow-right me-1"></i>
+                       View All {token} Posts
+                     </Link>
                   </div>
                 </div>
               </div>

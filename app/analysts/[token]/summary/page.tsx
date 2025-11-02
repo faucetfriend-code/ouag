@@ -358,13 +358,13 @@ export default async function TokenSummaryPage({ params }: TokenSummaryPageProps
                        <small className="text-secondary">
                          Latest post: {data.latestPost.toLocaleDateString()}
                        </small>
-                       <Link
-                         href={`/analysts/${token}`}
-                         className="btn btn-primary btn-sm"
-                       >
-                         View Full Analysis
-                         <i className="bi bi-arrow-right ms-2"></i>
-                       </Link>
+                        <Link
+                          href={`/analysts/${token}/posts`}
+                          className="btn btn-primary btn-sm"
+                        >
+                          View All Posts
+                          <i className="bi bi-arrow-right ms-2"></i>
+                        </Link>
                      </div>
                    </div>
                  </div>

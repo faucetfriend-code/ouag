@@ -99,6 +99,10 @@ export default async function TokenAnalysisPage({ params }: TokenPageProps) {
               <i className="bi bi-bar-chart me-2"></i>
               View Summary
             </Link>
+            <Link href={`/analysts/${token}/posts`} className="btn btn-info btn-sm">
+              <i className="bi bi-clock me-2"></i>
+              Chronological Posts
+            </Link>
           </div>
           <h1 className="mb-2"><span className="token-name">{tokenUpper}</span> Analysis</h1>
           <p className="text-secondary mb-0">Comprehensive analyst insights and technical analysis</p>
