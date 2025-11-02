@@ -33,17 +33,23 @@ export default function RecentActivityFeed() {
       }
 
       try {
-        // Fetch recent posts (this would ideally be an API call)
-        // For now, we'll use a client-side import
-        const { getRecentPosts } = await import('@/lib/analystDataSource');
-        const allPosts = await getRecentPosts(50);
+        // Call API to fetch posts from followed analysts
+        const favoritesParam = preferences.favoriteAnalysts.join(',');
+        const response = await fetch(`/api/activity?favorites=${encodeURIComponent(favoritesParam)}`);
 
-        // Filter to only show posts from followed analysts
-        const followedPosts = allPosts
-          .filter(post => preferences.favoriteAnalysts.includes(post.user))
-          .slice(0, 10); // Limit to 10 most recent
+        if (!response.ok) {
+          throw new Error('Failed to fetch activity');
+        }
 
-        setPosts(followedPosts);
+        const data = await response.json();
+
+        // Convert timestamp strings back to Date objects
+        const postsWithDates = data.posts.map((post: any) => ({
+          ...post,
+          timestamp: new Date(post.timestamp)
+        }));
+
+        setPosts(postsWithDates);
       } catch (error) {
         console.error('Error fetching recent posts:', error);
       } finally {
