@@ -9,6 +9,7 @@
 
 import Link from 'next/link';
 import { useAuth } from '@/lib/auth-context';
+import DataSourceToggle from '@/components/DataSourceToggle';
 
 export default function Home() {
   const { user, login, logout, loading, canAccessPremium, grantTestAccess } = useAuth();
@@ -73,6 +74,13 @@ export default function Home() {
             <p className="text-secondary mt-2 small">Enable premium features for testing</p>
           </div>
         )}
+      </div>
+
+      {/* DATA SOURCE TOGGLE: Switch between mock and Redis data */}
+      <div className="row mb-4">
+        <div className="col-12">
+          <DataSourceToggle />
+        </div>
       </div>
 
       {/* FEATURE CARDS: Main navigation to app sections */}

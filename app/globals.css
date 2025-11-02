@@ -9,7 +9,8 @@
   --medium-gray: #2d2d2d;
   --light-gray: #404040;
   --text-light: #f8f9fa;
-  --text-muted: #d2691e;
+  --text-muted: #b8b8b8;  /* Changed from #d2691e to light grey for better readability */
+  --text-secondary: #c8c8c8;  /* Lighter grey for secondary text */
   --glow-orange: rgba(255, 107, 53, 0.3);
   --glow-red: rgba(220, 53, 69, 0.3);
   --glow-yellow: rgba(255, 193, 7, 0.3);
@@ -42,7 +43,20 @@ body {
   background: linear-gradient(90deg, var(--dark-gray) 0%, var(--medium-gray) 100%);
   border-bottom: 1px solid var(--light-gray);
   border-radius: 15px 15px 0 0 !important;
-  color: var(--text-light);
+  color: var(--text-light) !important;  /* Ensure header text is always light */
+}
+
+.card-header h5,
+.card-header h6 {
+  color: var(--text-light) !important;  /* Force light color for headings in card headers */
+}
+
+.card-title {
+  color: var(--text-light) !important;  /* Ensure card titles are readable */
+}
+
+.card-text {
+  color: var(--text-light);  /* Ensure card text is readable */
 }
 
 .btn {
@@ -123,8 +137,9 @@ body {
 .text-success { color: var(--accent-yellow) !important; }
 .text-info { color: var(--secondary-red) !important; }
 .text-warning { color: var(--accent-yellow) !important; }
-.text-secondary { color: var(--text-muted) !important; }
-.text-dark { color: var(--primary-black) !important; }
+.text-secondary { color: var(--text-secondary) !important; }  /* Using lighter grey variable */
+.text-muted { color: var(--text-muted) !important; }  /* Alternative muted text class */
+.text-dark { color: var(--text-light) !important; }  /* Changed from black to light for readability on dark bg */
 
 /* Price overview and analyst quotes styling */
 .price-overview-text { color: var(--secondary-red) !important; }
@@ -155,11 +170,15 @@ body {
 }
 
 .breadcrumb-item a {
-  color: var(--primary-orange);
+  color: var(--primary-orange) !important;
 }
 
 .breadcrumb-item.active {
-  color: var(--text-light);
+  color: var(--text-light) !important;
+}
+
+.breadcrumb-item + .breadcrumb-item::before {
+  color: var(--text-secondary) !important;
 }
 
 .hover-card {
@@ -207,6 +226,15 @@ body {
   background: var(--secondary-red);
 }
 
+/* Small text readability */
+small {
+  color: var(--text-secondary) !important;
+}
+
+.small {
+  color: var(--text-secondary) !important;
+}
+
 /* Form elements */
 .form-check-input:checked {
   background-color: var(--primary-orange);
@@ -216,6 +244,19 @@ body {
 .form-check-input:focus {
   border-color: var(--primary-orange);
   box-shadow: 0 0 0 0.25rem rgba(255, 107, 53, 0.25);
+}
+
+.form-check-label {
+  color: var(--text-light) !important;
+}
+
+/* Select and input labels */
+label {
+  color: var(--text-light) !important;
+}
+
+h6 {
+  color: var(--text-light) !important;
 }
 
 /* Badge styling */
@@ -258,17 +299,27 @@ body {
 
 /* Table styling */
 .table {
-  color: var(--text-light);
+  color: var(--text-light) !important;
 }
 
 .table thead th {
   border-bottom: 2px solid var(--light-gray);
-  color: var(--text-light);
+  color: var(--text-light) !important;
   font-weight: 600;
 }
 
 .table tbody td {
   border-bottom: 1px solid var(--light-gray);
+  color: var(--text-light) !important;
+}
+
+.table tbody tr {
+  color: var(--text-light) !important;
+}
+
+/* Ensure table small text is readable */
+.table small {
+  color: var(--text-secondary) !important;
 }
 
 /* Link styling */

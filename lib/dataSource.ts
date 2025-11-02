@@ -4,13 +4,26 @@
  * This module provides a unified interface for data access that can toggle
  * between mock data (for UI development) and real Redis data (for production).
  *
- * Toggle between modes using the NEXT_PUBLIC_USE_MOCK_DATA environment variable:
- * - true: Use mock data from mockDataFunctions (UI development)
- * - false: Use real Redis data from serverData (production)
+ * Toggle between modes using:
+ * 1. Runtime: localStorage key 'unity_oracle_data_source' (checked first)
+ * 2. Build time: NEXT_PUBLIC_USE_MOCK_DATA environment variable (fallback)
  */
 
+// Helper to get data source preference
+function getDataSourcePreference(): boolean {
+  // Client-side: check localStorage first
+  if (typeof window !== 'undefined') {
+    const stored = localStorage.getItem('unity_oracle_data_source');
+    if (stored === 'mock') return true;
+    if (stored === 'redis') return false;
+  }
+
+  // Fallback to environment variable
+  return process.env.NEXT_PUBLIC_USE_MOCK_DATA === 'true';
+}
+
 // Check if we should use mock data
-const USE_MOCK_DATA = process.env.NEXT_PUBLIC_USE_MOCK_DATA === 'true';
+const USE_MOCK_DATA = getDataSourcePreference();
 
 // Conditionally import the appropriate data source
 // Note: Both imports are always evaluated, but we only use one
