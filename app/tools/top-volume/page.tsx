@@ -1,0 +1,25 @@
+import Link from 'next/link';
+
+export default function TopVolumePage() {
+  return (
+    <div className="container mt-4">
+      {/* Breadcrumb */}
+      <nav aria-label="breadcrumb" className="mb-3">
+        <ol className="breadcrumb">
+          <li className="breadcrumb-item">
+            <Link href="/" className="text-decoration-none">Home</Link>
+          </li>
+          <li className="breadcrumb-item">
+            <Link href="/tools" className="text-decoration-none">Tools</Link>
+          </li>
+          <li className="breadcrumb-item active" aria-current="page">Top Volume</li>
+        </ol>
+      </nav>
+
+      {/* Page Content */}
+      <div className="text-center">
+        <h1>Tool 1</h1>
+      </div>
+    </div>
+  );
+}

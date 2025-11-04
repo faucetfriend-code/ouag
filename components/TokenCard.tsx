@@ -8,6 +8,7 @@
 'use client';
 
 import { useState } from 'react';
+import Link from 'next/link';
 import { TradingPost } from '../data/mockData';
 import TokenChart from './TokenChart';
 import { summarizeTokenData } from '../utils/summarization';
@@ -72,9 +73,11 @@ export default function TokenCard({ token, posts }: TokenCardProps) {
                  onChange={() => toggleAnalyst(analyst)}
                  id={`${token}-${analyst}`}
                />
-               <label className="form-check-label" htmlFor={`${token}-${analyst}`} style={{ color: getUserColor(analyst) }}>
-                 {analyst}
-               </label>
+                <Link href={`/profile/analyst/${analyst}`} className="text-decoration-none">
+                  <label className="form-check-label" htmlFor={`${token}-${analyst}`} style={{ color: getUserColor(analyst), cursor: 'pointer' }}>
+                    {analyst}
+                  </label>
+                </Link>
              </div>
            ))}
          </div>

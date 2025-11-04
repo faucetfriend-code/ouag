@@ -7,6 +7,7 @@
 
 'use client';
 
+import Link from 'next/link';
 import { TradingPost as TradingPostType } from '../data/mockData';
 
 interface TradingPostProps {
@@ -46,14 +47,16 @@ export default function TradingPost({ post, showChannel = true }: TradingPostPro
           >
             {post.user.charAt(0).toUpperCase()}
           </div>
-          <div>
-            <h6 className="mb-0" style={{ color: getUserColor(post.user) }}>
-              {post.user}
-            </h6>
-            {showChannel && (
-              <small className="text-secondary">#{post.channel}</small>
-            )}
-          </div>
+           <div>
+             <Link href={`/profile/analyst/${post.user}`} className="text-decoration-none">
+               <h6 className="mb-0" style={{ color: getUserColor(post.user) }}>
+                 {post.user}
+               </h6>
+             </Link>
+             {showChannel && (
+               <small className="text-secondary">#{post.channel}</small>
+             )}
+           </div>
         </div>
         <small className="text-secondary">
           {post.timestamp.toLocaleDateString()} {post.timestamp.toLocaleTimeString()}

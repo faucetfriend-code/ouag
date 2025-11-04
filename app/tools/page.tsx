@@ -29,7 +29,7 @@ const tools = [
     description: 'Monitor perpetual futures funding rates across exchanges',
     icon: 'bi-cash-stack',
     color: 'info',
-    status: 'Coming Soon'
+    status: 'Available'
   },
   {
     id: 'volatility',
@@ -37,7 +37,7 @@ const tools = [
     description: 'Analyze price volatility and risk metrics for cryptocurrencies',
     icon: 'bi-bar-chart-line',
     color: 'warning',
-    status: 'Coming Soon'
+    status: 'Available'
   },
   {
     id: 'watchlist',
@@ -45,7 +45,7 @@ const tools = [
     description: 'Create and manage your personal cryptocurrency watchlist',
     icon: 'bi-star',
     color: 'secondary',
-    status: 'Coming Soon'
+    status: 'Available'
   },
   {
     id: 'oracle-alerts',
@@ -53,7 +53,7 @@ const tools = [
     description: 'Set up price alerts and notifications from analyst insights',
     icon: 'bi-bell',
     color: 'danger',
-    status: 'Coming Soon'
+    status: 'Available'
   }
 ];
 
@@ -133,7 +133,7 @@ export default function ToolsPage() {
       <div className="row g-4">
         {tools.map((tool) => (
           <div key={tool.id} className="col-md-6 col-lg-4">
-            <div className={`card h-100 shadow-sm ${tool.status === 'Available' ? 'hover-card' : 'opacity-50'}`}>
+            <div className="card h-100 shadow-sm hover-card">
               <div className="card-body text-center">
                 <div className={`mb-3 text-${tool.color}`}>
                   <i className={`bi ${tool.icon} display-4`}></i>
@@ -142,19 +142,12 @@ export default function ToolsPage() {
                  <p className="card-text text-secondary small">
                   {tool.description}
                 </p>
-                <div className="mt-3">
-                  {tool.status === 'Available' ? (
-                    <button className={`btn btn-${tool.color} w-100`} disabled>
-                      <i className="bi bi-play-circle me-2"></i>
-                      Launch Tool
-                    </button>
-                  ) : (
-                    <span className="badge bg-secondary w-100 py-2">
-                      <i className="bi bi-clock me-1"></i>
-                      {tool.status}
-                    </span>
-                  )}
-                </div>
+                 <div className="mt-3">
+                   <Link href={`/tools/${tool.id}`} className={`btn btn-${tool.color} w-100 text-decoration-none`}>
+                     <i className="bi bi-play-circle me-2"></i>
+                     Launch Tool
+                   </Link>
+                 </div>
               </div>
             </div>
           </div>
