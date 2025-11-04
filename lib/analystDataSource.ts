@@ -40,8 +40,8 @@ function getDataSourcePreference(): boolean {
     }
   }
 
-  // Fallback to environment variable
-  return process.env.NEXT_PUBLIC_USE_MOCK_DATA === 'true';
+  // Default to mock data for now (Redis integration preserved but disabled)
+  return true; // Always use mock data
 }
 
 /**

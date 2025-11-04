@@ -6,6 +6,9 @@ import { useUserPreferences } from '@/lib/user-preferences-context';
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import RecentActivityFeed from '@/components/RecentActivityFeed';
+import SecuritySettingsModal from '@/components/settings/SecuritySettingsModal';
+import NotificationSettingsModal from '@/components/settings/NotificationSettingsModal';
+import CurrencySettingsModal from '@/components/settings/CurrencySettingsModal';
 
 const portfolio = [
   { token: 'BTC', amount: 0.5, value: 29375, change24h: 2.34 },
@@ -21,7 +24,11 @@ export default function ProfilePage() {
   const { user, login, logout, loading, grantTestAccess } = useAuth();
   const { preferences, updateTradingPreferences, updateNotificationSettings, updateAnalysisPreferences, savePreferences, unfavoriteAnalyst } = useUserPreferences();
   const router = useRouter();
-  const [saveStatus, setSaveStatus] = useState<'idle' | 'saving' | 'saved' | 'error'>('idle');
+
+  // Modal states
+  const [showSecurityModal, setShowSecurityModal] = useState(false);
+  const [showNotificationModal, setShowNotificationModal] = useState(false);
+  const [showCurrencyModal, setShowCurrencyModal] = useState(false);
 
   if (loading) {
     return (
@@ -63,18 +70,7 @@ export default function ProfilePage() {
     }).format(amount);
   };
 
-  const handleSavePreferences = async () => {
-    setSaveStatus('saving');
-    try {
-      await savePreferences();
-      setSaveStatus('saved');
-      setTimeout(() => setSaveStatus('idle'), 3000);
-    } catch (error) {
-      console.error('Error saving preferences:', error);
-      setSaveStatus('error');
-      setTimeout(() => setSaveStatus('idle'), 3000);
-    }
-  };
+
 
   return (
     <div className="container mt-4">
@@ -175,32 +171,37 @@ export default function ProfilePage() {
              </div>
            </div>
 
-          {/* Account Settings */}
-          <div className="card mt-3">
-            <div className="card-header">
-              <h6 className="mb-0">Account Settings</h6>
-            </div>
-            <div className="card-body">
-              <div className="d-grid gap-2">
-                <button className="btn btn-outline-secondary btn-sm text-start" disabled>
-                  <i className="bi bi-shield-check me-2"></i>
-                  Security Settings
-                </button>
-                <button className="btn btn-outline-secondary btn-sm text-start" disabled>
-                  <i className="bi bi-bell me-2"></i>
-                  Notification Preferences
-                </button>
-                <button className="btn btn-outline-secondary btn-sm text-start" disabled>
-                  <i className="bi bi-palette me-2"></i>
-                  Theme Settings
-                </button>
-                <button className="btn btn-outline-secondary btn-sm text-start" disabled>
-                  <i className="bi bi-currency-exchange me-2"></i>
-                  Currency Preferences
-                </button>
-              </div>
-            </div>
-          </div>
+           {/* Account Settings */}
+           <div className="card mt-3">
+             <div className="card-header">
+               <h6 className="mb-0">Account Settings</h6>
+             </div>
+             <div className="card-body">
+               <div className="d-grid gap-2">
+                 <button
+                   className="btn btn-outline-primary btn-sm text-start"
+                   onClick={() => setShowSecurityModal(true)}
+                 >
+                   <i className="bi bi-shield-check me-2"></i>
+                   Security Settings
+                 </button>
+                 <button
+                   className="btn btn-outline-primary btn-sm text-start"
+                   onClick={() => setShowNotificationModal(true)}
+                 >
+                   <i className="bi bi-bell me-2"></i>
+                   Notification Preferences
+                 </button>
+                 <button
+                   className="btn btn-outline-primary btn-sm text-start"
+                   onClick={() => setShowCurrencyModal(true)}
+                 >
+                   <i className="bi bi-currency-exchange me-2"></i>
+                   Currency Preferences
+                 </button>
+               </div>
+             </div>
+           </div>
         </div>
 
         {/* Portfolio Overview */}
@@ -263,23 +264,11 @@ export default function ProfilePage() {
             </div>
           </div>
 
-          {/* Trading Preferences */}
-          <div className="card mb-4">
-            <div className="card-header d-flex justify-content-between align-items-center">
-              <h5 className="mb-0">Trading Preferences</h5>
-              {saveStatus === 'saved' && (
-                <small className="text-success">
-                  <i className="bi bi-check-circle me-1"></i>
-                  Saved!
-                </small>
-              )}
-              {saveStatus === 'error' && (
-                <small className="text-danger">
-                  <i className="bi bi-x-circle me-1"></i>
-                  Error saving
-                </small>
-              )}
-            </div>
+           {/* Trading Preferences */}
+           <div className="card mb-4">
+             <div className="card-header">
+               <h5 className="mb-0">Trading Preferences</h5>
+             </div>
             <div className="card-body">
               <div className="row">
                 <div className="col-md-6">
@@ -366,30 +355,7 @@ export default function ProfilePage() {
                 </div>
               </div>
 
-              <div className="row mt-3">
-                <div className="col-12">
-                  <button
-                    className="btn btn-primary"
-                    onClick={handleSavePreferences}
-                    disabled={saveStatus === 'saving'}
-                  >
-                    {saveStatus === 'saving' ? (
-                      <>
-                        <span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
-                        Saving...
-                      </>
-                    ) : (
-                      <>
-                        <i className="bi bi-save me-2"></i>
-                        Save Preferences
-                      </>
-                    )}
-                  </button>
-                  <small className="text-secondary ms-3">
-                    Changes are auto-saved, or click to save immediately
-                  </small>
-                </div>
-              </div>
+
             </div>
           </div>
 
@@ -486,6 +452,20 @@ export default function ProfilePage() {
           </div>
         </div>
       </div>
+
+      {/* Settings Modals */}
+      <SecuritySettingsModal
+        show={showSecurityModal}
+        onHide={() => setShowSecurityModal(false)}
+      />
+      <NotificationSettingsModal
+        show={showNotificationModal}
+        onHide={() => setShowNotificationModal(false)}
+      />
+      <CurrencySettingsModal
+        show={showCurrencyModal}
+        onHide={() => setShowCurrencyModal(false)}
+      />
     </div>
   );
 }

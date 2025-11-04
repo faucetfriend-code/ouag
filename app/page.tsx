@@ -15,43 +15,16 @@ export default function Home() {
   const { user, login, logout, loading, canAccessPremium, grantTestAccess } = useAuth();
 
   return (
-    <>
-      {/* Navigation Header */}
-      <nav className="navbar navbar-expand-lg navbar-dark bg-dark">
-        <div className="container">
-          <Link href="/" className="navbar-brand">
-            <i className="bi bi-graph-up me-2"></i>
-            Unity Oracle
-          </Link>
-
-          <div className="navbar-nav ms-auto">
-            {loading ? (
-              <div className="navbar-text">
-                <div className="spinner-border spinner-border-sm text-light" role="status">
-                  <span className="visually-hidden">Loading...</span>
-                </div>
-              </div>
-            ) : user ? (
-              <div className="navbar-nav">
-                <Link href="/profile" className="nav-link">
-                  <i className="bi bi-person-circle me-1"></i>
-                  {user.username}
-                </Link>
-                <button onClick={logout} className="btn btn-outline-light btn-sm ms-2">
-                  Logout
-                </button>
-              </div>
-            ) : (
-              <button onClick={login} className="btn btn-primary btn-sm">
-                <i className="bi bi-discord me-1"></i>
-                Login
-              </button>
-            )}
-          </div>
-        </div>
+    <div className="container mt-4">
+      {/* Breadcrumb Navigation */}
+      <nav aria-label="breadcrumb" className="mb-3">
+        <ol className="breadcrumb">
+          <li className="breadcrumb-item active" aria-current="page">
+            Home
+          </li>
+        </ol>
       </nav>
 
-      <div className="container mt-5">
       {/* HERO SECTION: Main branding and feature highlights */}
       <div className="text-center mb-5">
         <h1 className="display-4 fw-bold text-primary mb-3 glow-orange">Unity Oracle Aggregator</h1>
@@ -153,7 +126,7 @@ export default function Home() {
               <p className="card-text text-secondary">
                 Read raw analyst comments and discussions for real-time market sentiment.
               </p>
-              <Link href="/analysts" className="btn btn-secondary">
+              <Link href="/comments" className="btn btn-secondary">
                 <i className="bi bi-arrow-right-circle me-2"></i>
                 View Comments
               </Link>
@@ -242,8 +215,7 @@ export default function Home() {
             </div>
           </div>
         </div>
-      </div>
-    </div>
-  </>
-  );
-}
+       </div>
+     </div>
+   );
+ }

@@ -8,6 +8,8 @@ import ErrorBoundary from '@/components/ErrorBoundary'
 import GlobalLoadingSpinner from '@/components/GlobalLoadingSpinner'
 import ToastProvider from '@/components/ToastProvider'
 import OfflineIndicator from '@/components/OfflineIndicator'
+import Navigation from '@/components/Navigation'
+import Footer from '@/components/Footer'
 
 export const metadata: Metadata = {
   title: 'Unity Oracle Aggregator',
@@ -26,7 +28,9 @@ export default function RootLayout({
           <LoadingProvider>
             <AuthProvider>
               <UserPreferencesProvider>
+                <Navigation />
                 {children}
+                <Footer />
                 <GlobalLoadingSpinner />
                 <ToastProvider />
                 <OfflineIndicator />

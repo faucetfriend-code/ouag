@@ -358,13 +358,13 @@ export default async function TokenSummaryPage({ params }: TokenSummaryPageProps
                        <small className="text-secondary">
                          Latest post: {data.latestPost.toLocaleDateString()}
                        </small>
-                        <Link
-                          href={`/analysts/${token}/posts`}
-                          className="btn btn-primary btn-sm"
-                        >
-                          View All Posts
-                          <i className="bi bi-arrow-right ms-2"></i>
-                        </Link>
+                         <Link
+                           href="/comments"
+                           className="btn btn-primary btn-sm"
+                         >
+                           View All Comments
+                           <i className="bi bi-arrow-right ms-2"></i>
+                         </Link>
                      </div>
                    </div>
                  </div>
@@ -380,20 +380,20 @@ export default async function TokenSummaryPage({ params }: TokenSummaryPageProps
           <div className="card">
             <div className="card-body text-center">
               <h6 className="card-title mb-3">Quick Actions</h6>
-              <div className="d-flex justify-content-center gap-3">
-                <Link href={`/analysts/${token}`} className="btn btn-primary">
-                  <i className="bi bi-graph-up me-2"></i>
-                  View Detailed Analysis
-                </Link>
-                <Link href="/analysts" className="btn btn-outline-secondary">
-                  <i className="bi bi-arrow-left me-2"></i>
-                  All Tokens
-                </Link>
-                <Link href="/tools" className="btn btn-success">
-                  <i className="bi bi-tools me-2"></i>
-                  Trading Tools
-                </Link>
-              </div>
+               <div className="d-flex justify-content-center gap-3">
+                 <Link href="/comments" className="btn btn-primary">
+                   <i className="bi bi-chat-quote me-2"></i>
+                   View All Comments
+                 </Link>
+                 <Link href="/analysts" className="btn btn-outline-secondary">
+                   <i className="bi bi-arrow-left me-2"></i>
+                   All Tokens
+                 </Link>
+                 <Link href="/tools" className="btn btn-success">
+                   <i className="bi bi-tools me-2"></i>
+                   Trading Tools
+                 </Link>
+               </div>
             </div>
           </div>
         </div>
