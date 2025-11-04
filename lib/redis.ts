@@ -6,7 +6,7 @@
  */
 
 import { createClient, RedisClientType } from 'redis';
-import { TradingPost, mockTradingPosts } from '../data/mockData';
+import { mockTradingPosts } from '../data/mockData';
 import { ProcessedPost } from './workflow';
 
 class RedisService {

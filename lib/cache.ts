@@ -7,6 +7,8 @@
 
 'use client';
 
+import React from 'react';
+
 interface CacheItem<T> {
   data: T;
   timestamp: number;
@@ -133,13 +135,17 @@ export function isOnline(): boolean {
  * Hook to listen for online/offline status
  */
 export function useOnlineStatus() {
-  if (typeof window === 'undefined') {
-    return true; // SSR
-  }
-
-  const [online, setOnline] = React.useState(navigator.onLine);
+  // Always call hooks first (before any conditional returns)
+  const [online, setOnline] = React.useState(() =>
+    typeof window !== 'undefined' ? navigator.onLine : true
+  );
 
   React.useEffect(() => {
+    // Skip effect on SSR
+    if (typeof window === 'undefined') {
+      return;
+    }
+
     const handleOnline = () => setOnline(true);
     const handleOffline = () => setOnline(false);
 
@@ -154,9 +160,6 @@ export function useOnlineStatus() {
 
   return online;
 }
-
-// Add React import for the hook
-import React from 'react';
 
 /**
  * Cache with fallback pattern

@@ -188,5 +188,74 @@
 
 ---
 
+## 🧹 CODE QUALITY - COSMETIC LINT ISSUES (LOW PRIORITY)
+
+### Status: 31 remaining lint issues (15 errors, 16 warnings)
+**Impact:** Non-breaking, doesn't affect functionality
+**Priority:** Low - These are safe to ignore or fix during cleanup sprints
+
+---
+
+### 🟡 Warnings (16) - Non-Breaking
+
+#### **Intentionally Unused Variables** (Safe to ignore with `_` prefix)
+- `_request` in `app/api/preferences/route.ts:16,69` (2×)
+- `_error` in `components/settings/SecuritySettingsModal.tsx:34,50` (2×)
+- `_analysisType` in `lib/aiService.ts:27`
+- `_setLoading` in `lib/auth-context.tsx:53`
+
+#### **Actually Unused Variables** (Quick fix - remove these)
+- `useEffect` imported but unused in `app/profile/page.tsx:6`
+- `savePreferences` destructured but unused in `app/profile/page.tsx:25`
+- `router` destructured but unused in `app/profile/page.tsx:26`
+- `showSuccess` defined but unused in `components/DataSourceToggle.tsx:15`
+
+#### **Code Style Warnings**
+- `app/profile/page.tsx:143` - Using `<img>` instead of Next.js `<Image />` (performance suggestion)
+- `app/profile/page.tsx:374` - Unescaped apostrophe - should use `&apos;` instead of `'`
+- `components/Navigation.tsx:43` - Unused eslint-disable directive
+
+---
+
+### 🔴 Errors (15) - TypeScript `any` Types
+
+**Impact:** Reduces type safety but doesn't break functionality
+
+#### **`lib/auth.ts`** (3 errors - NextAuth config)
+- Line 17: `export async function auth(): Promise<any>`
+- Line 38: `export async function signIn(provider: string, options?: any)`
+- Line 48: `export async function signOut(options?: any)`
+
+#### **`lib/workflow.ts`** (6 errors - Complex workflow processing)
+- Line 32: `extractRelevantData(payload: any)`
+- Line 144: `extractTokensFromContent(content: string): any[]`
+- Line 168: `extractPriceTargets(content: string): any[]`
+- Line 196: `generateAIAnalysisIfNeeded(content: any, data: ExtractedData)`
+- Line 258: `mapPlatformField(field: string, value: any): any`
+
+#### **Other Files**
+- `lib/redis.ts:108` - `storeProcessedPost` returns `any`
+- `lib/use-async.ts:13` - Generic async utility with `any[]` args (2×)
+- `components/RecentActivityFeed.tsx:47` - `.reduce()` with `any` type
+
+---
+
+### 🎯 Fix Priority (If Desired)
+
+**Quick wins (5 min):**
+- Remove unused imports (`useEffect`, `router`, `savePreferences`, `showSuccess`)
+- Fix apostrophe: `You're` → `You&apos;re`
+- Remove unused eslint-disable directive
+
+**Medium effort (20 min):**
+- Replace `<img>` with Next.js `<Image />`
+- Type `RecentActivityFeed.tsx:47` reduce function
+
+**Large refactor (1-2 hours):**
+- Create proper TypeScript interfaces for `lib/workflow.ts`
+- Add NextAuth proper types to `lib/auth.ts`
+
+---
+
 *Last Updated: November 2025*
 *Analysis based on mobile app context (Capacitor/React Native)*

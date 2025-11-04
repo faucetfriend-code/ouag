@@ -19,21 +19,24 @@ type DataSource = 'mock' | 'redis';
 const COOKIE_NAME = 'analyst_data_source';
 
 export default function DataSourceToggle() {
-  const [dataSource, setDataSource] = useState<DataSource>('mock');
+  // Initialize with lazy evaluation to avoid setState in useEffect
+  const [dataSource, setDataSource] = useState<DataSource>(() => {
+    if (typeof window === 'undefined') return 'mock';
+
+    const stored = Cookies.get(COOKIE_NAME) as DataSource;
+    if (stored === 'mock' || stored === 'redis') {
+      return stored;
+    }
+    // Default to env variable
+    const envDefault = (process.env.NEXT_PUBLIC_USE_MOCK_DATA === 'true' ? 'mock' : 'redis') as DataSource;
+    // Set cookie with 1 year expiration
+    Cookies.set(COOKIE_NAME, envDefault, { expires: 365 });
+    return envDefault;
+  });
+
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
-    // Load preference from cookie
-    const stored = Cookies.get(COOKIE_NAME) as DataSource;
-    if (stored === 'mock' || stored === 'redis') {
-      setDataSource(stored);
-    } else {
-      // Default to env variable
-      const envDefault = process.env.NEXT_PUBLIC_USE_MOCK_DATA === 'true' ? 'mock' : 'redis';
-      setDataSource(envDefault);
-      // Set cookie with 1 year expiration
-      Cookies.set(COOKIE_NAME, envDefault, { expires: 365 });
-    }
     setMounted(true);
   }, []);
 

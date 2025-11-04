@@ -37,8 +37,10 @@ export default function Navigation() {
   };
 
   // Close mobile menu when route changes
+  // Note: This is a valid synchronization effect with routing state
   useEffect(() => {
     setIsMobileMenuOpen(false);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [pathname]);
 
   // Close mobile menu when clicking outside

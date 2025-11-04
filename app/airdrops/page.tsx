@@ -12,13 +12,6 @@ export default async function AirdropsPage() {
   const activeAirdrops = await getActiveAirdrops();
   const upcomingAirdrops = await getUpcomingAirdrops();
 
-  const getStatusBadge = (status: string) => {
-    if (status === 'active') return 'bg-success';
-    if (status === 'upcoming') return 'bg-warning text-dark';
-    if (status === 'ended') return 'bg-secondary';
-    return 'bg-info';
-  };
-
   return (
     <div className="container mt-4">
       {/* Breadcrumb */}

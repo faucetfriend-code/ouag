@@ -1,12 +1,22 @@
- import Link from 'next/link';
- import { notFound } from 'next/navigation';
+import Link from 'next/link';
+import { notFound } from 'next/navigation';
 import { getTradingPostsByToken, getAllTokens } from '../../../../lib/analystDataSource';
-import { organizeDataByToken } from '../../../../utils/dataOrganization';
+import { TradingPost } from '../../../../data/mockData';
 
 interface TokenSummaryPageProps {
   params: Promise<{
     token: string;
   }>;
+}
+
+interface AnalystSummary {
+  posts: TradingPost[];
+  totalPosts: number;
+  bullishCount: number;
+  bearishCount: number;
+  neutralCount: number;
+  keyPoints: string[];
+  latestPost: Date;
 }
 
 export default async function TokenSummaryPage({ params }: TokenSummaryPageProps) {
@@ -105,22 +115,14 @@ export default async function TokenSummaryPage({ params }: TokenSummaryPageProps
     }
 
     return acc;
-  }, {} as Record<string, {
-    posts: typeof tokenPosts;
-    totalPosts: number;
-    bullishCount: number;
-    bearishCount: number;
-    neutralCount: number;
-    keyPoints: string[];
-    latestPost: Date;
-  }>);
+  }, {} as Record<string, AnalystSummary>);
 
   /**
    * SENTIMENT ANALYSIS HELPERS
    */
 
   // Determine overall sentiment for an individual analyst
-  const getOverallSentiment = (analyst: any) => {
+  const getOverallSentiment = (analyst: AnalystSummary) => {
     const { bullishCount, bearishCount, neutralCount } = analyst;
     if (bullishCount > bearishCount && bullishCount > neutralCount) return 'bullish';
     if (bearishCount > bullishCount && bearishCount > neutralCount) return 'bearish';
@@ -128,9 +130,9 @@ export default async function TokenSummaryPage({ params }: TokenSummaryPageProps
   };
 
   // Calculate aggregate sentiment across all analysts for this token
-  const totalBullish = Object.values(analystSummaries).reduce((sum: number, analyst: any) => sum + analyst.bullishCount, 0);
-  const totalBearish = Object.values(analystSummaries).reduce((sum: number, analyst: any) => sum + analyst.bearishCount, 0);
-  const totalNeutral = Object.values(analystSummaries).reduce((sum: number, analyst: any) => sum + analyst.neutralCount, 0);
+  const totalBullish = Object.values(analystSummaries).reduce((sum: number, analyst: AnalystSummary) => sum + analyst.bullishCount, 0);
+  const totalBearish = Object.values(analystSummaries).reduce((sum: number, analyst: AnalystSummary) => sum + analyst.bearishCount, 0);
+  const totalNeutral = Object.values(analystSummaries).reduce((sum: number, analyst: AnalystSummary) => sum + analyst.neutralCount, 0);
 
   // Determine overall market sentiment based on aggregate signals
   const overallSentiment = totalBullish > totalBearish && totalBullish > totalNeutral ? 'bullish' :

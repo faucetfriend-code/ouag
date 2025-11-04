@@ -54,8 +54,8 @@ export class AnalystWorkflow {
     // Step 2: Process content based on length
     const processedContent = await this.processContent(payload.content, extractedData);
 
-    // Step 3: Generate or update chart data
-    const chartData = await this.updateChartData(extractedData.tokens[0], payload, extractedData);
+    // Step 3: Generate or update chart data (stored in Redis separately)
+    await this.updateChartData(extractedData.tokens[0], payload, extractedData);
 
     // Step 4: Generate AI analysis if needed
     const aiAnalysis = await this.generateAnalysisIfNeeded(processedContent, extractedData);
@@ -114,8 +114,8 @@ export class AnalystWorkflow {
     const bullishWords = ['bullish', 'buy', 'long', 'up', 'breakout', 'target', 'accumulation', 'strong'];
     const bearishWords = ['bearish', 'sell', 'short', 'down', 'reversal', 'caution', 'distribution', 'weak'];
 
-    let bullishCount = bullishWords.reduce((count, word) => count + (content.includes(word) ? 1 : 0), 0);
-    let bearishCount = bearishWords.reduce((count, word) => count + (content.includes(word) ? 1 : 0), 0);
+    const bullishCount = bullishWords.reduce((count, word) => count + (content.includes(word) ? 1 : 0), 0);
+    const bearishCount = bearishWords.reduce((count, word) => count + (content.includes(word) ? 1 : 0), 0);
 
     let sentiment: 'bullish' | 'bearish' | 'neutral' = 'neutral';
     let confidence = 0.5;

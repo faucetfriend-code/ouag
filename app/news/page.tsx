@@ -6,17 +6,15 @@
  */
 
 import Link from 'next/link';
-import { getLatestNews, getNewsCategories, NewsCategory } from '@/lib/newsData';
+import { getLatestNews, getNewsCategories } from '@/lib/newsData';
 
 export default async function NewsPage() {
   const news = await getLatestNews(20);
   const categories = await getNewsCategories();
 
-  const getSentimentColor = (sentiment?: string) => {
-    if (sentiment === 'bullish') return 'text-success';
-    if (sentiment === 'bearish') return 'text-danger';
-    return 'text-secondary';
-  };
+  // Calculate current time once for the entire render (server component - not affected by re-renders)
+  // eslint-disable-next-line react-hooks/rules-of-hooks
+  const now = Date.now();
 
   const getSentimentBadge = (sentiment?: string) => {
     if (sentiment === 'bullish') return 'bg-success';
@@ -24,8 +22,8 @@ export default async function NewsPage() {
     return 'bg-secondary';
   };
 
-  const formatTimeAgo = (date: Date) => {
-    const hours = Math.floor((Date.now() - date.getTime()) / 3600000);
+  const formatTimeAgo = (date: Date, currentTime: number) => {
+    const hours = Math.floor((currentTime - date.getTime()) / 3600000);
     if (hours < 1) return 'Just now';
     if (hours === 1) return '1 hour ago';
     if (hours < 24) return `${hours} hours ago`;
@@ -100,7 +98,7 @@ export default async function NewsPage() {
                 <div className="d-flex justify-content-between align-items-center mb-2">
                   <small className="text-muted">
                     <i className="bi bi-clock me-1"></i>
-                    {formatTimeAgo(article.publishedAt)}
+                    {formatTimeAgo(article.publishedAt, now)}
                   </small>
                   <small className="text-muted">{article.source}</small>
                 </div>

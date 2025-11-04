@@ -24,7 +24,7 @@ export async function generateAnalysis(
   content: string,
   token: string,
   analyst: string,
-  analysisType: 'general' | 'technical' | 'fundamental' = 'general'
+  _analysisType: 'general' | 'technical' | 'fundamental' = 'general'
 ): Promise<AnalysisResult> {
   // Simulate API delay
   await new Promise(resolve => setTimeout(resolve, 100));

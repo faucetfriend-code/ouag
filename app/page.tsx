@@ -12,7 +12,7 @@ import { useAuth } from '@/lib/auth-context';
 import DataSourceToggle from '@/components/DataSourceToggle';
 
 export default function Home() {
-  const { user, login, logout, loading, canAccessPremium, grantTestAccess } = useAuth();
+  const { user, canAccessPremium, grantTestAccess } = useAuth();
 
   return (
     <div className="container mt-4">

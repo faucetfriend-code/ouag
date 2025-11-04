@@ -67,9 +67,13 @@ export default async function AnalystProfilePage({ params }: AnalystProfilePageP
   const analystData = await getAnalystData(username);
   const followerCount = await getAnalystFollowerCount(username);
 
+  // Calculate current time once for the entire render (server component - not affected by re-renders)
+  // eslint-disable-next-line react-hooks/rules-of-hooks
+  const now = Date.now();
+
   // Format time ago
-  const formatTimeAgo = (date: Date) => {
-    const hours = Math.floor((Date.now() - date.getTime()) / 3600000);
+  const formatTimeAgo = (date: Date, currentTime: number) => {
+    const hours = Math.floor((currentTime - date.getTime()) / 3600000);
     if (hours < 1) return 'Just now';
     if (hours === 1) return '1 hour ago';
     if (hours < 24) return `${hours} hours ago`;
@@ -120,7 +124,7 @@ export default async function AnalystProfilePage({ params }: AnalystProfilePageP
                   </p>
                   <p className="text-muted small mb-0">
                     <i className="bi bi-calendar me-1"></i>
-                    Joined {formatTimeAgo(analystData.stats.firstPost)}
+                    Joined {formatTimeAgo(analystData.stats.firstPost, now)}
                   </p>
                 </div>
               </div>
@@ -189,7 +193,7 @@ export default async function AnalystProfilePage({ params }: AnalystProfilePageP
                     </div>
                     <small className="text-muted d-block mb-2">
                       <i className="bi bi-clock me-1"></i>
-                      {formatTimeAgo(post.timestamp)}
+                      {formatTimeAgo(post.timestamp, now)}
                     </small>
                     <p className="card-text text-secondary small mb-3">
                       {post.content.length > 150

@@ -31,7 +31,7 @@ export default function SecuritySettingsModal({ show, onHide }: SecuritySettings
       setCurrentPassword('');
       setNewPassword('');
       setConfirmPassword('');
-    } catch (error) {
+    } catch (_error) {
       alert('Error changing password');
     } finally {
       setIsLoading(false);
@@ -47,7 +47,7 @@ export default function SecuritySettingsModal({ show, onHide }: SecuritySettings
       await new Promise(resolve => setTimeout(resolve, 1000));
       setTwoFactorEnabled(!twoFactorEnabled);
       alert(`${twoFactorEnabled ? 'Disabled' : 'Enabled'} two-factor authentication`);
-    } catch (error) {
+    } catch (_error) {
       alert('Error updating 2FA settings');
     } finally {
       setIsLoading(false);

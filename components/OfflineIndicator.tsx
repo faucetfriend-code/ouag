@@ -10,13 +10,13 @@
 import { useState, useEffect } from 'react';
 
 export default function OfflineIndicator() {
-  const [isOnline, setIsOnline] = useState(true);
+  // Initialize with navigator.onLine (lazy initialization to avoid setState in effect)
+  const [isOnline, setIsOnline] = useState(() =>
+    typeof navigator !== 'undefined' ? navigator.onLine : true
+  );
   const [wasOffline, setWasOffline] = useState(false);
 
   useEffect(() => {
-    // Check initial status
-    setIsOnline(navigator.onLine);
-
     const handleOnline = () => {
       setIsOnline(true);
       // Show "back online" message briefly

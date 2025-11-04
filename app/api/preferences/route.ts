@@ -13,7 +13,7 @@ import type { UserPreferences } from '@/lib/user-preferences-context';
  * GET /api/preferences
  * Load user preferences from Redis
  */
-export async function GET(request: NextRequest) {
+export async function GET(_request: NextRequest) {
   try {
     // In a real app, you'd get userId from the session/JWT
     // For now, we'll use the test user ID
@@ -66,7 +66,7 @@ export async function POST(request: NextRequest) {
  * DELETE /api/preferences
  * Delete user preferences from Redis
  */
-export async function DELETE(request: NextRequest) {
+export async function DELETE(_request: NextRequest) {
   try {
     // In a real app, you'd get userId from the session/JWT
     const userId = 'test-doom'; // TODO: Get from authenticated session

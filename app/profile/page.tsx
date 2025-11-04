@@ -277,7 +277,7 @@ export default function ProfilePage() {
                     <select
                       className="form-select"
                       value={preferences?.tradingPreferences.riskTolerance || 'Moderate'}
-                      onChange={(e) => updateTradingPreferences({ riskTolerance: e.target.value as any })}
+                      onChange={(e) => updateTradingPreferences({ riskTolerance: e.target.value as 'Conservative' | 'Moderate' | 'Aggressive' })}
                     >
                       <option value="Conservative">Conservative</option>
                       <option value="Moderate">Moderate</option>
@@ -291,7 +291,7 @@ export default function ProfilePage() {
                     <select
                       className="form-select"
                       value={preferences?.tradingPreferences.defaultTimeframe || '1d'}
-                      onChange={(e) => updateTradingPreferences({ defaultTimeframe: e.target.value as any })}
+                      onChange={(e) => updateTradingPreferences({ defaultTimeframe: e.target.value as '1h' | '4h' | '1d' | '1w' })}
                     >
                       <option value="1h">1 Hour</option>
                       <option value="4h">4 Hours</option>

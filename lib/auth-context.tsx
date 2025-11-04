@@ -1,6 +1,6 @@
 'use client';
 
-import React, { createContext, useContext, useEffect, useState } from 'react';
+import React, { createContext, useContext, useState } from 'react';
 
 export interface User {
   id: string;
@@ -29,6 +29,9 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
+// Calculate test subscription expiry date once (1 year from module load)
+const TEST_SUBSCRIPTION_EXPIRY = new Date(Date.now() + 365 * 24 * 60 * 60 * 1000);
+
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   // Test user for development
   const testUser: User = {
@@ -41,13 +44,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     isServerMember: true,
     subscription: {
       active: true,
-      endDate: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000), // 1 year
+      endDate: TEST_SUBSCRIPTION_EXPIRY,
       plan: 'Test Access'
     }
   };
 
   const [user, setUser] = useState<User | null>(testUser);
-  const [loading, setLoading] = useState(false);
+  const [loading, _setLoading] = useState(false);
 
   const refreshUser = async () => {
     try {
@@ -89,7 +92,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         isServerMember: true,
         subscription: {
           active: true,
-          endDate: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000), // 1 year from now
+          endDate: TEST_SUBSCRIPTION_EXPIRY,
           plan: 'Test Access'
         }
       });

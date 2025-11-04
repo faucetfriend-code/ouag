@@ -115,8 +115,8 @@ export default async function AnalystCommentsPage() {
                 <div className="col-md-3">
                   <div className="p-3">
                     <h4 className="text-warning mb-1">
-                      {allPosts.length > 0 ?
-                        new Date(Math.max(...allPosts.map((p: TradingPost) => p.timestamp.getTime()))).toLocaleDateString() :
+                      {chronologicalPosts.length > 0 ?
+                        chronologicalPosts[0].timestamp.toLocaleDateString() :
                         'No data'}
                     </h4>
                     <small className="text-secondary">Latest Comment</small>

@@ -23,20 +23,24 @@ const DataSourceContext = createContext<DataSourceContextType | undefined>(undef
 const STORAGE_KEY = 'unity_oracle_data_source';
 
 export function DataSourceProvider({ children }: { children: React.ReactNode }) {
-  const [dataSource, setDataSourceState] = useState<DataSource>('mock');
-  const [mounted, setMounted] = useState(false);
+  // Initialize state with localStorage value (lazy initialization to avoid setState in effect)
+  const [dataSource, setDataSourceState] = useState<DataSource>(() => {
+    if (typeof window === 'undefined') return 'mock';
 
-  // Load preference from localStorage on mount
-  useEffect(() => {
     const stored = localStorage.getItem(STORAGE_KEY) as DataSource;
     if (stored === 'mock' || stored === 'redis') {
-      setDataSourceState(stored);
-    } else {
-      // Default to env variable if available
-      const envDefault = process.env.NEXT_PUBLIC_USE_MOCK_DATA === 'true' ? 'mock' : 'redis';
-      setDataSourceState(envDefault);
+      return stored;
     }
+    // Default to env variable if available
+    return process.env.NEXT_PUBLIC_USE_MOCK_DATA === 'true' ? 'mock' : 'redis';
+  });
+
+  const [mounted, setMounted] = useState(false);
+
+  // Set mounted flag after hydration (valid hydration pattern)
+  useEffect(() => {
     setMounted(true);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const setDataSource = (source: DataSource) => {
