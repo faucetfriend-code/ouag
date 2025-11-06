@@ -12,8 +12,10 @@ npm run build            # Build Next.js application
 npm run start            # Start production server
 npm run lint             # Run ESLint (use this for quick validation)
 
-# Redis Database
-npm run redis:init       # Seed Redis with initial data
+# Database
+npm run db:push          # Push Prisma schema to PostgreSQL
+npm run db:studio        # Open Prisma Studio (database GUI)
+npm run redis:init       # Seed Redis with initial analyst data
 npm run redis:clear      # Clear all Redis data
 
 # Android Build
@@ -26,38 +28,150 @@ npm run android:run      # Build and run on Android device
 
 ### Multi-Database Strategy
 
-This application uses **separate data sources for different features**:
+This application uses **two primary databases**:
 
-1. **Analyst Insights** (Main Feature)
-   - Database: Redis (DB 0)
-   - Toggle: Cookie `analyst_data_source` or env `NEXT_PUBLIC_USE_MOCK_DATA`
-   - Source: `lib/analystDataSource.ts` (with feature flag)
-   - Populated by: n8n workflow (`unity-oracle-workflow.json`)
+1. **PostgreSQL (via Prisma)** - Primary database for:
+   - User accounts and authentication (NextAuth)
+   - User preferences
+   - Portfolio holdings and tracking
+   - Notification history
+   - Subscription management
 
-2. **Trading Tools**
-   - Database: Separate Redis DB (planned)
-   - Source: `data/toolsData.ts` (currently mock)
+2. **Redis** - High-performance caching for:
+   - Analyst insights and posts
+   - Token data and charts
+   - Real-time data that needs fast access
+   - Cache invalidation patterns
 
-3. **News Feed**
-   - Database: Separate Redis DB (planned)
-   - Source: `data/newsData.ts` (currently mock)
+### Database Architecture
 
-4. **Airdrop Guide**
-   - Database: Separate Redis DB (planned)
-   - Source: `data/airdropsData.ts` (currently mock)
+**PostgreSQL Schema** (`prisma/schema.prisma`):
+- `User` - User accounts with Discord OAuth
+- `Account` - NextAuth OAuth connections
+- `Session` - NextAuth session management
+- `UserPreferences` - User settings and preferences
+- `Portfolio` - User's cryptocurrency portfolio
+- `PortfolioHolding` - Individual holdings within portfolio
+- `Notification` - Notification history
 
-### Redis Schema (Analyst Data)
-
-**Key Patterns:**
+**Redis Schema** (Analyst Data):
 - `post:{postId}` - Complete post data (JSON)
 - `token:{TOKEN}:posts` - List of post IDs for token
 - `user:{username}:posts` - List of post IDs for analyst
 - `timeline:{TOKEN}` - Sorted set (score: timestamp)
 - `chart:{TOKEN}` - Chart data (TTL: 1 hour)
 - `cache:invalidate:{TOKEN}` - Cache flag (TTL: 5 min)
-- `user:preferences:{userId}` - User preferences (JSON)
 
-**Important:** All Redis operations use the singleton `redisService` from `lib/redis.ts`. See `my docs/DATABASE_CONNECTION.md` for complete schema documentation.
+**Important:** PostgreSQL is the source of truth for user data. Redis is used for caching and real-time features.
+
+### Authentication & Authorization
+
+**NextAuth Setup:**
+- Provider: Discord OAuth
+- Session strategy: JWT with database persistence
+- Server membership validation on login
+- User interface in `lib/auth-context.tsx` converts NextAuth session to app User type
+
+**Auth Flow:**
+```
+User clicks "Login with Discord"
+  → NextAuth redirects to Discord OAuth
+  → User authorizes app
+  → NextAuth callback validates Discord server membership
+  → Creates/updates User in PostgreSQL
+  → Sets JWT session cookie
+  → User object available via `useAuth()` hook
+```
+
+**Key Files:**
+- `lib/auth.ts` - NextAuth configuration (Discord provider, callbacks)
+- `lib/auth-context.tsx` - React context wrapping NextAuth session
+- `app/api/auth/[...nextauth]/route.ts` - NextAuth API route
+
+**Usage:**
+```typescript
+const { user, loading, login, logout, canAccessPremium } = useAuth();
+```
+
+### User Preferences System
+
+**Dual-Storage Architecture:**
+- **localStorage:** Immediate client-side access (no network delay)
+- **PostgreSQL:** Persistent server storage via Prisma
+
+**Sync Pattern:**
+1. User changes preference in UI
+2. Immediately saved to localStorage
+3. Debounced 2-second delay before PostgreSQL save
+4. API call to `/api/preferences` (authenticated via NextAuth session)
+5. Prisma upserts to UserPreferences table
+
+**Preference Categories:**
+```typescript
+{
+  currency, timezone, theme, language,        // Display preferences
+  emailNotifications, pushNotifications,      // Notification preferences
+  priceAlerts, analystUpdates, marketNews,   // Alert preferences
+  riskTolerance, defaultTimeframe,           // Trading preferences
+  favoriteTokens                             // Followed/favorite tokens
+}
+```
+
+**Key Files:**
+- `lib/user-preferences-context.tsx` - React context with debounced sync
+- `app/api/preferences/route.ts` - API endpoints (GET, POST, DELETE)
+- `prisma/schema.prisma` - UserPreferences model
+
+### Portfolio System
+
+**Real-Time Portfolio Tracking:**
+- Stores user's cryptocurrency holdings in PostgreSQL
+- Fetches live prices from CoinGecko API with caching
+- Calculates total value, P&L, and allocation percentages
+- Supports CSV/JSON import via `PortfolioImportModal`
+
+**Data Flow:**
+```
+User imports portfolio → CSV/JSON parser → Validation
+  → API call to /api/portfolio → Prisma creates holdings
+  → CoinGecko API fetch → Cache prices (5 min TTL)
+  → Calculate total value & P&L → Return to frontend
+```
+
+**Key Components:**
+- `app/api/portfolio/route.ts` - Portfolio CRUD
+- `app/api/portfolio/refresh/route.ts` - Price refresh endpoint
+- `components/PortfolioImportModal.tsx` - Import UI
+- `components/PositionTracker.tsx` - Leveraged position tracking
+
+### Notification System
+
+**Multi-Platform Push Notifications:**
+- **Web:** Service worker with Push API
+- **Android:** Firebase Cloud Messaging (FCM)
+- **iOS:** Apple Push Notification Service (APNs)
+
+**Architecture:**
+```
+Trigger (price alert, analyst post)
+  → Notification Service generates notification
+  → Check user preferences (are notifications enabled?)
+  → Store in PostgreSQL (Notification table)
+  → Send push via platform API (Web Push/FCM/APNs)
+  → Update unread count badge
+```
+
+**Key Files:**
+- `lib/notifications.ts` - Notification service
+- `components/NotificationCenter.tsx` - In-app notification UI
+- `app/api/notifications/` - Notification API routes
+- `public/service-worker.js` - Web push handler
+
+**Features:**
+- Badge count on navigation bell icon
+- Notification history with read/unread status
+- Category filtering (price alerts, portfolio, news, system)
+- Quick actions from notifications
 
 ### Data Flow (n8n Workflow)
 
@@ -80,14 +194,15 @@ See `my docs/WORKFLOW_DOCUMENTATION.md` for complete workflow details.
 **Critical Rule:** Client components (`'use client'`) **cannot** import server-only modules.
 
 **Pattern:**
-- Server-side data fetching → Use direct imports of `lib/serverData.ts` or `lib/analystDataSource.ts`
+- Server-side data fetching → Use direct imports or Prisma client
 - Client-side data needs → Create API route in `app/api/` and fetch via HTTP
+- Authentication checks → Use NextAuth `auth()` on server, `useAuth()` on client
 
 **Example:**
 ```typescript
-// ❌ WRONG - Client component importing server-only code
+// ❌ WRONG - Client component importing Prisma
 'use client';
-import { getTradingPostsByToken } from '@/lib/analystDataSource';
+import { prisma } from '@/lib/prisma';
 
 // ✅ CORRECT - Client component using API
 'use client';
@@ -95,50 +210,46 @@ const response = await fetch('/api/posts?token=BTC');
 const { posts } = await response.json();
 ```
 
-### User Preferences System
-
-**Architecture:**
-- **Context:** `lib/user-preferences-context.tsx` (React Context)
-- **Client Storage:** localStorage (fast access)
-- **Server Storage:** Redis (`user:preferences:{userId}`)
-- **API:** `app/api/preferences/route.ts` (GET, POST, DELETE)
-- **Sync Pattern:** Auto-save with 2-second debounce
-
-**Preference Types:**
-- Trading preferences (risk tolerance, timeframe)
-- Notification settings
-- Analysis preferences
-- Favorite analysts (follow system)
-
-**Usage:**
-```typescript
-const { preferences, updateTradingPreferences, favoriteAnalyst } = useUserPreferences();
-```
-
 ## Important File Locations
 
 ### Core Data Layer
-- `lib/analystDataSource.ts` - Main data source with cookie-based toggle
+- `lib/prisma.ts` - Prisma client singleton
+- `lib/redis.ts` - Redis service singleton
+- `lib/analystDataSource.ts` - Analyst data with cookie-based mock/Redis toggle
 - `lib/serverData.ts` - Server-only Redis data fetching (marked with `'server-only'`)
 - `lib/mockDataFunctions.ts` - Mock data for development
-- `lib/redis.ts` - Redis service singleton
 - `lib/workflow.ts` - Post processing utilities
 
+### Authentication & Authorization
+- `lib/auth.ts` - NextAuth configuration (Discord OAuth, callbacks, JWT)
+- `lib/auth-context.tsx` - React context wrapping NextAuth
+- `app/api/auth/[...nextauth]/route.ts` - NextAuth API handler
+
 ### Context Providers
-- `lib/user-preferences-context.tsx` - User preferences management
+- `lib/user-preferences-context.tsx` - User preferences with PostgreSQL sync
 - `lib/data-source-context.tsx` - Data source toggle (analyst data only)
-- `lib/auth.tsx` - Authentication context
+- `lib/auth-context.tsx` - Authentication state management
 
 ### API Routes
-- `app/api/preferences/route.ts` - User preferences CRUD
+- `app/api/preferences/route.ts` - User preferences CRUD (Prisma)
+- `app/api/portfolio/route.ts` - Portfolio management (Prisma + CoinGecko)
+- `app/api/notifications/` - Notification endpoints
 - `app/api/activity/route.ts` - Recent posts from followed analysts
-- `app/api/webhooks/[platform].ts` - n8n webhook receivers (Discord, Twitter)
+- `app/api/webhooks/[platform].ts` - n8n webhook receivers
 
 ### Key Pages
-- `app/profile/page.tsx` - User profile with preferences and activity feed
+- `app/profile/page.tsx` - User profile with portfolio, preferences, activity feed
 - `app/profile/analyst/[username]/page.tsx` - Dynamic analyst profiles
 - `app/analysts/[token]/page.tsx` - Token analysis by all analysts
 - `app/analysts/[token]/summary/page.tsx` - Sentiment summary by analyst
+- `app/comments/page.tsx` - Chronological feed of all analyst posts
+
+### Settings & Modals
+- `components/settings/SecuritySettingsModal.tsx` - Password, 2FA, sessions
+- `components/settings/NotificationSettingsModal.tsx` - Notification preferences
+- `components/settings/CurrencySettingsModal.tsx` - Display preferences
+- `components/PortfolioImportModal.tsx` - CSV/JSON import
+- `components/NotificationCenter.tsx` - Notification inbox UI
 
 ## Key Technical Patterns
 
@@ -164,94 +275,174 @@ export async function generateStaticParams() {
 }
 ```
 
-### 3. Feature Flag Pattern (Cookie-Based)
+### 3. Authentication-Protected API Routes
 
-The app uses cookies (not localStorage) for SSR-compatible feature flags:
+All API routes requiring auth should check NextAuth session:
 
 ```typescript
-// Set in client
-Cookies.set('analyst_data_source', 'mock' | 'redis');
+import { auth } from '@/lib/auth';
 
-// Read anywhere (server/client)
-const useMock = getDataSourcePreference(); // Checks cookie, then env
+export async function GET(request: NextRequest) {
+  const session = await auth();
+
+  if (!session?.user?.id) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
+
+  // Proceed with authenticated logic
+  const userId = session.user.id;
+  // ...
+}
 ```
 
-### 4. Follower/Favorite System
+### 4. Prisma Query Patterns
 
-**Storage:**
-- `user:preferences:{userId}` → `favoriteAnalysts: string[]`
-- `user:followers:{username}` → Set of follower user IDs (future)
+Common Prisma operations:
 
-**Functions:**
-- `favoriteAnalyst(username)` - Add to favorites
-- `unfavoriteAnalyst(username)` - Remove from favorites
-- `getAnalystFollowerCount(username)` - Count followers (server-only)
+```typescript
+// Find unique by ID
+const user = await prisma.user.findUnique({
+  where: { id: userId }
+});
 
-### 5. Recent Activity Feed
+// Upsert (create or update)
+const prefs = await prisma.userPreferences.upsert({
+  where: { userId },
+  update: { currency: 'EUR' },
+  create: { userId, currency: 'EUR' }
+});
 
-Shows posts from followed analysts only:
+// Include relations
+const portfolio = await prisma.portfolio.findFirst({
+  where: { userId },
+  include: { holdings: true }
+});
+```
 
-**Flow:**
-1. Client reads `favoriteAnalysts` from preferences
-2. Calls `/api/activity?favorites=analyst1,analyst2`
-3. API fetches posts and filters by analysts
-4. Returns last 10 posts sorted by time
+### 5. Mobile-Specific Features
+
+**Swipe Gestures:**
+- Uses `@use-gesture/react` for swipe detection
+- Edge swipe from left opens mobile menu
+- Implemented in `components/Navigation.tsx`
+
+**Haptic Feedback:**
+- `lib/haptics.ts` provides tactile feedback functions
+- `lightImpact()`, `mediumImpact()`, `heavyImpact()`
+- Used for menu toggles, button presses, notifications
+
+**Progressive Web App:**
+- Service worker in `public/service-worker.js`
+- Handles push notifications when app is closed
+- Offline caching for basic functionality
 
 ## Common Gotchas
 
-### 1. TypeScript `any` Types
-The codebase has many `@typescript-eslint/no-explicit-any` errors. When adding new code, prefer proper typing over `any`.
+### 1. NextAuth Session Type Extension
 
-### 2. React Hooks in Effects
-`lib/data-source-context.tsx` has a known issue with `setState` in `useEffect`. Don't replicate this pattern.
+NextAuth's default session type doesn't include our custom User fields. Extend it:
 
-### 3. Build vs Lint
+```typescript
+// In lib/auth-context.tsx, cast to custom User interface
+const user: User = {
+  id: session.user.id,
+  discordId: (session.user as any).discordId,
+  // ...
+};
+```
+
+### 2. Prisma Client Singleton
+
+Always import from `lib/prisma.ts`, never instantiate directly:
+
+```typescript
+// ✅ CORRECT
+import { prisma } from '@/lib/prisma';
+
+// ❌ WRONG
+import { PrismaClient } from '@prisma/client';
+const prisma = new PrismaClient();
+```
+
+### 3. API Routes Need INSERTAPIHERE Markers
+
+The codebase uses `// INSERTAPIHERE:` comments to mark where API endpoints need implementation. Search for these when adding features.
+
+### 4. Settings Modals Use Toast Notifications
+
+Use `lib/toast.ts` functions instead of `alert()`:
+
+```typescript
+import { showSuccess, showError } from '@/lib/toast';
+
+showSuccess('Settings saved!');
+showError('Failed to save settings');
+```
+
+### 5. TypeScript `any` Types
+
+The codebase has many `@typescript-eslint/no-explicit-any` errors (see TDB.md). When adding new code, prefer proper typing over `any`.
+
+### 6. Build vs Lint
+
 - Use `npm run lint` for quick validation (faster)
 - Use `npm run build` for full validation (catches more errors, but slower)
 
-### 4. Android Build Artifacts
-The `android/` folder contains compiled code that generates thousands of lint warnings. These can be ignored.
+### 7. Server-Only Imports
 
-### 5. Server-Only Imports
 Always check if you're in a Client Component before importing:
+- `lib/prisma.ts` → Server-only
 - `lib/serverData.ts` → Server-only
 - `lib/analystDataSource.ts` → Works both sides (has internal check)
 - `lib/redis.ts` → Server-only
 
-### 6. Mock vs Real Data Toggle
+### 8. Mock vs Real Data Toggle
+
 The data source toggle **only affects analyst insights**. Tools, News, and Airdrops always use their respective data sources.
 
 ## Development Workflow
 
-1. **Running Locally:**
+1. **Initial Setup:**
+   ```bash
+   # Install dependencies
+   npm install
+
+   # Setup PostgreSQL database
+   npm run db:push
+
+   # (Optional) Seed Redis with analyst data
+   npm run redis:init
+   ```
+
+2. **Running Locally:**
    ```bash
    npm run dev:local
    # Access at http://localhost:3000
    ```
 
-2. **Network Testing (mobile/other devices):**
+3. **Network Testing (mobile/other devices):**
    ```bash
    npm run dev
    # Access at http://<your-ip>:3000
    ```
 
-3. **Quick Validation:**
+4. **Database Management:**
+   ```bash
+   # View/edit database in browser
+   npm run db:studio
+
+   # Apply schema changes
+   npm run db:push
+   ```
+
+5. **Quick Validation:**
    ```bash
    npm run lint
    # Fix auto-fixable issues:
    npm run lint -- --fix
    ```
 
-4. **Redis Setup:**
-   ```bash
-   # First time: seed data
-   npm run redis:init
-
-   # Reset database
-   npm run redis:clear && npm run redis:init
-   ```
-
-5. **Testing Workflow Integration:**
+6. **Testing Workflow Integration:**
    - Start n8n and import `unity-oracle-workflow.json`
    - Configure webhooks to point to your app
    - Send test posts via Discord/Twitter or manual webhook
@@ -261,6 +452,8 @@ The data source toggle **only affects analyst insights**. Tools, News, and Airdr
 
 - `my docs/DATABASE_CONNECTION.md` - Complete Redis schema and query patterns
 - `my docs/WORKFLOW_DOCUMENTATION.md` - n8n workflow architecture
+- `prisma/schema.prisma` - PostgreSQL database schema
+- `TDB.md` - Known issues, TODOs, and code quality notes
 - `package.json` - All available scripts
 - This file (`CLAUDE.md`) - Architecture overview
 
@@ -269,8 +462,8 @@ The data source toggle **only affects analyst insights**. Tools, News, and Airdr
 This is a hybrid web/mobile app using Capacitor:
 
 - **Config:** `capacitor.config.ts`
-- **Web root:** `out/` (static export)
-- **Platform:** Android (iOS not configured)
+- **Web root:** `out/` (static export from Next.js)
+- **Platforms:** Android (configured), iOS (planned)
 
 **Build for Android:**
 ```bash
@@ -278,23 +471,63 @@ npm run android:build  # Builds Next.js and syncs to Android
 npm run android:open   # Opens Android Studio
 ```
 
+**Mobile Features:**
+- Push notifications (FCM for Android, APNs for iOS)
+- Swipe gestures for navigation
+- Haptic feedback
+- Service worker for offline functionality
+- Biometric authentication (placeholder, not fully implemented)
+
 ## Environment Variables
 
 ```bash
-# Redis
+# Database
+DATABASE_URL=postgresql://user:password@localhost:5432/unity_oracle
 REDIS_URL=redis://localhost:6379
 
+# NextAuth
+NEXTAUTH_URL=http://localhost:3000
+NEXTAUTH_SECRET=<generate-with-openssl-rand-base64-32>
+
+# Discord OAuth
+DISCORD_CLIENT_ID=your_client_id
+DISCORD_CLIENT_SECRET=your_client_secret
+DISCORD_SERVER_ID=your_server_id  # For membership validation
+
+# CoinGecko API (for portfolio prices)
+COINGECKO_API_KEY=your_api_key  # Optional, free tier works
+
 # Mock Data Toggle (fallback if no cookie)
-NEXT_PUBLIC_USE_MOCK_DATA=true
+NEXT_PUBLIC_USE_MOCK_DATA=false
 
 # OpenAI (used by n8n workflow, not frontend)
 OPENAI_API_KEY=sk-...
+
+# Push Notifications
+NEXT_PUBLIC_VAPID_PUBLIC_KEY=your_vapid_public_key
+VAPID_PRIVATE_KEY=your_vapid_private_key
+FCM_SERVER_KEY=your_fcm_server_key
 ```
 
-## Test User
+## Known Limitations & TODOs
 
-The app uses a hardcoded test user for development:
-- User ID: `'test-doom'`
-- Defined in: `lib/user-preferences-context.tsx` and API routes
+### Security Settings (Partially Implemented)
+- Password change form exists but API endpoint needs implementation
+- 2FA toggle exists but backend not connected
+- Biometric authentication temporarily disabled (Capacitor plugin issue)
+- Session management UI exists but needs API endpoints
 
-Replace with real auth when implementing authentication.
+### Subscription System (Placeholder)
+- Subscription display works with test data
+- "Subscribe Now" button exists but no payment integration
+- No Stripe/PayPal integration yet
+- Subscription validation exists but defaults to test access
+
+### Data Persistence
+- User preferences: ✅ Complete (PostgreSQL via Prisma)
+- Portfolio: ✅ Complete (PostgreSQL via Prisma)
+- Notifications: ✅ Complete (PostgreSQL via Prisma)
+- Analyst posts: ✅ Complete (Redis)
+- Trading tools data: ❌ Still using mock data
+
+See `TDB.md` for complete list of known issues and implementation priorities.

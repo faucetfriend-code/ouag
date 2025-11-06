@@ -9,7 +9,7 @@
  */
 
 import { TradingPost } from '../data/mockData';
-import { generateAnalysis } from './aiService';
+import { generateAnalysis, AnalysisResult } from './aiService';
 import { redisService } from './redis';
 
 export interface WebhookPayload {
@@ -25,16 +25,26 @@ export interface WebhookPayload {
   id: string;
 }
 
+export interface ExtractedData {
+  tokens: string[];
+  sentiment: 'bullish' | 'bearish' | 'neutral';
+  confidence: number;
+  author: WebhookPayload['author'];
+  platform: WebhookPayload['platform'];
+}
+
+export interface ProcessedContent {
+  content: string;
+  type: 'full' | 'summary';
+  summary: string | null;
+}
+
 export interface ProcessedPost extends Omit<TradingPost, 'chartData'> {
   chartData?: number[];
   contentType: 'full' | 'summary';
   originalLength: number;
-  aiAnalysis?: any;
-  extractedData: {
-    tokens: string[];
-    sentiment: 'bullish' | 'bearish' | 'neutral';
-    confidence: number;
-  };
+  aiAnalysis?: AnalysisResult | null;
+  extractedData: ExtractedData;
 }
 
 export class AnalystWorkflow {
@@ -85,10 +95,10 @@ export class AnalystWorkflow {
   }
 
   /**
-   * STEP 1: EXTRACT RELEVANT DATA
-   * Parses content to find tokens, sentiment, and key information
-   */
-  private extractRelevantData(payload: WebhookPayload) {
+    * STEP 1: EXTRACT RELEVANT DATA
+    * Parses content to find tokens, sentiment, and key information
+    */
+  private extractRelevantData(payload: WebhookPayload): ExtractedData {
     const content = payload.content.toLowerCase();
 
     // Extract token symbols ($BTC, $ETH, etc.)
@@ -138,10 +148,10 @@ export class AnalystWorkflow {
   }
 
   /**
-   * STEP 2: PROCESS CONTENT
-   * Decides whether to store full content or generate summary
-   */
-  private async processContent(content: string, extractedData: any) {
+    * STEP 2: PROCESS CONTENT
+    * Decides whether to store full content or generate summary
+    */
+  private async processContent(content: string, extractedData: ExtractedData): Promise<ProcessedContent> {
     const isShort = content.length <= this.MAX_SHORT_POST_LENGTH;
 
     if (isShort) {
@@ -163,9 +173,9 @@ export class AnalystWorkflow {
   }
 
   /**
-   * GENERATE SUMMARY FOR LONG POSTS
-   */
-  private async generateSummary(content: string, extractedData: any): Promise<string> {
+    * GENERATE SUMMARY FOR LONG POSTS
+    */
+  private async generateSummary(content: string, extractedData: ExtractedData): Promise<string> {
     // For now, use simple extraction. In production, use AI.
     const sentences = content.split(/[.!?]+/).filter(s => s.trim().length > 10);
 
@@ -190,10 +200,10 @@ export class AnalystWorkflow {
   }
 
   /**
-   * STEP 3: UPDATE CHART DATA
-   * Extracts or generates chart data points
-   */
-  private async updateChartData(token: string, payload: WebhookPayload, extractedData: any): Promise<number[]> {
+    * STEP 3: UPDATE CHART DATA
+    * Extracts or generates chart data points
+    */
+  private async updateChartData(token: string, payload: WebhookPayload, extractedData: ExtractedData): Promise<number[]> {
     // Extract price data from content (e.g., "$58,750", "$1950")
     const priceRegex = /\$[\d,]+(?:\.\d+)?/g;
     const prices: number[] = [];
@@ -253,9 +263,9 @@ export class AnalystWorkflow {
   }
 
   /**
-   * STEP 4: GENERATE AI ANALYSIS IF NEEDED
-   */
-  private async generateAnalysisIfNeeded(processedContent: any, extractedData: any) {
+    * STEP 4: GENERATE AI ANALYSIS IF NEEDED
+    */
+  private async generateAnalysisIfNeeded(processedContent: ProcessedContent, extractedData: ExtractedData) {
     // Generate AI analysis for posts with clear trading signals
     const hasTradingSignals = extractedData.confidence > 0.6;
     const isLongPost = processedContent.type === 'summary';

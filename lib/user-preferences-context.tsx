@@ -13,11 +13,18 @@ export interface NotificationSettings {
   priceAlerts: boolean;
   analystInsights: boolean;
   pushEnabled: boolean;
+  emailEnabled?: boolean;
+  smsEnabled?: boolean;
 }
 
 export interface AnalysisPreferences {
   technicalAnalysis: boolean;
   fundamentalAnalysis: boolean;
+}
+
+export interface CurrencyPreferences {
+  primaryCurrency: string;
+  displayFormat: 'symbol' | 'code';
 }
 
 export interface UserPreferences {
@@ -26,6 +33,7 @@ export interface UserPreferences {
   tradingPreferences: TradingPreferences;
   notificationSettings: NotificationSettings;
   analysisPreferences: AnalysisPreferences;
+  currencyPreferences: CurrencyPreferences;
   lastSync?: Date;
 }
 
@@ -42,6 +50,8 @@ interface UserPreferencesContextType {
   updateNotificationSettings: (settings: Partial<NotificationSettings>) => Promise<void>;
   // Analysis Preferences
   updateAnalysisPreferences: (prefs: Partial<AnalysisPreferences>) => Promise<void>;
+  // Currency Preferences
+  updateCurrencyPreferences: (prefs: Partial<CurrencyPreferences>) => Promise<void>;
   // Save all
   savePreferences: () => Promise<void>;
   // Refresh from server
@@ -66,6 +76,10 @@ const getDefaultPreferences = (userId: string): UserPreferences => ({
   analysisPreferences: {
     technicalAnalysis: true,
     fundamentalAnalysis: true,
+  },
+  currencyPreferences: {
+    primaryCurrency: 'USD',
+    displayFormat: 'symbol',
   },
 });
 
@@ -228,6 +242,19 @@ export function UserPreferencesProvider({ children }: { children: React.ReactNod
     scheduleSyncToServer();
   }, [preferences, saveToLocalStorage, scheduleSyncToServer]);
 
+  // Update currency preferences
+  const updateCurrencyPreferences = useCallback(async (prefs: Partial<CurrencyPreferences>) => {
+    if (!preferences) return;
+
+    const newPrefs = {
+      ...preferences,
+      currencyPreferences: { ...preferences.currencyPreferences, ...prefs },
+    };
+    setPreferences(newPrefs);
+    saveToLocalStorage(newPrefs);
+    scheduleSyncToServer();
+  }, [preferences, saveToLocalStorage, scheduleSyncToServer]);
+
   // Manual save (force immediate sync)
   const savePreferences = useCallback(async () => {
     if (!preferences) return;
@@ -262,6 +289,7 @@ export function UserPreferencesProvider({ children }: { children: React.ReactNod
         updateTradingPreferences,
         updateNotificationSettings,
         updateAnalysisPreferences,
+        updateCurrencyPreferences,
         savePreferences,
         refreshPreferences,
       }}

@@ -1,7 +1,21 @@
 import NextAuth from 'next-auth';
+import { PrismaAdapter } from '@auth/prisma-adapter';
+import type { Account, Profile, Session } from 'next-auth';
+import type { JWT } from 'next-auth/jwt';
 import DiscordProvider from 'next-auth/providers/discord';
+import { prisma } from './prisma';
+
+interface DiscordGuild {
+  id: string;
+  name: string;
+  icon?: string;
+  owner: boolean;
+  permissions: string;
+  features: string[];
+}
 
 export const authConfig = {
+  adapter: PrismaAdapter(prisma),
   providers: [
     DiscordProvider({
       clientId: process.env.DISCORD_CLIENT_ID!,
@@ -14,7 +28,11 @@ export const authConfig = {
     }),
   ],
   callbacks: {
-    async jwt({ token, account, profile }: any) {
+    async jwt({ token, account, profile }: {
+      token: JWT;
+      account: Account | null;
+      profile?: Profile;
+    }) {
       if (account && profile) {
         token.discordId = profile.id;
         token.username = profile.username;
@@ -32,10 +50,10 @@ export const authConfig = {
             });
 
             if (guildsResponse.ok) {
-              const guilds = await guildsResponse.json();
+              const guilds: DiscordGuild[] = await guildsResponse.json();
               // Replace with your actual Discord server ID
               const serverId = process.env.DISCORD_SERVER_ID!;
-              token.isServerMember = guilds.some((guild: any) => guild.id === serverId);
+              token.isServerMember = guilds.some((guild) => guild.id === serverId);
             }
           } catch (error) {
             console.error('Failed to check server membership:', error);
@@ -45,7 +63,10 @@ export const authConfig = {
       }
       return token;
     },
-    async session({ session, token }: any) {
+    async session({ session, token }: {
+      session: Session;
+      token: JWT;
+    }) {
       if (token) {
         session.user.id = token.sub!;
         session.user.discordId = token.discordId as string;
@@ -55,12 +76,33 @@ export const authConfig = {
         session.user.email = token.email as string;
         session.user.isServerMember = token.isServerMember as boolean;
 
-        // Mock subscription data - replace with real subscription logic
-        session.user.subscription = {
-          active: Math.random() > 0.5, // Random for demo
-          endDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), // 30 days from now
-          plan: 'Premium',
-        };
+        // Fetch real subscription data from database
+        try {
+          const subscription = await prisma.subscription.findUnique({
+            where: { userId: token.sub! }
+          });
+
+          if (subscription) {
+            session.user.subscription = {
+              active: subscription.status === 'active',
+              endDate: subscription.currentPeriodEnd || undefined,
+              plan: subscription.plan,
+            };
+          } else {
+            // Free tier for users without subscription
+            session.user.subscription = {
+              active: false,
+              plan: 'free',
+            };
+          }
+        } catch (error) {
+          console.error('Error fetching subscription:', error);
+          // Fallback to free tier
+          session.user.subscription = {
+            active: false,
+            plan: 'free',
+          };
+        }
       }
       return session;
     },
@@ -71,3 +113,6 @@ export const authConfig = {
 };
 
 export const { handlers, auth, signIn, signOut } = NextAuth(authConfig);
+
+// Backward compatibility for API routes
+export const authOptions = authConfig;

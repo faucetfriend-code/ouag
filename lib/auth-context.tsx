@@ -1,15 +1,17 @@
 'use client';
 
-import React, { createContext, useContext, useState } from 'react';
+import React, { createContext, useContext, useEffect, useState } from 'react';
+import { useSession, signIn, signOut } from 'next-auth/react';
 
 export interface User {
   id: string;
-  discordId: string;
-  username: string;
-  discriminator: string;
+  discordId?: string;
+  username?: string;
+  discriminator?: string;
   avatar?: string;
   email?: string;
-  isServerMember: boolean;
+  name?: string;
+  isServerMember?: boolean;
   subscription?: {
     active: boolean;
     endDate?: Date;
@@ -29,56 +31,42 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-// Calculate test subscription expiry date once (1 year from module load)
-const TEST_SUBSCRIPTION_EXPIRY = new Date(Date.now() + 365 * 24 * 60 * 60 * 1000);
-
 export function AuthProvider({ children }: { children: React.ReactNode }) {
-  // Test user for development
-  const testUser: User = {
-    id: 'test-doom',
-    discordId: '123456789',
-    username: 'Doom',
-    discriminator: '0001',
-    avatar: undefined,
-    email: 'doom@test.com',
-    isServerMember: true,
-    subscription: {
-      active: true,
-      endDate: TEST_SUBSCRIPTION_EXPIRY,
-      plan: 'Test Access'
-    }
-  };
+  const { data: session, status } = useSession();
+  const [user, setUser] = useState<User | null>(null);
+  const loading = status === 'loading';
 
-  const [user, setUser] = useState<User | null>(testUser);
-  const [loading, _setLoading] = useState(false);
-
-  const refreshUser = async () => {
-    try {
-      const response = await fetch('/api/auth/me');
-      if (response.ok) {
-        const userData = await response.json();
-        setUser(userData);
-      } else {
-        setUser(null);
-      }
-    } catch (error) {
-      console.error('Failed to refresh user:', error);
+  // Convert NextAuth session to our User interface
+  useEffect(() => {
+    if (session?.user) {
+      setUser({
+        id: session.user.id,
+        discordId: (session.user as any).discordId,
+        username: (session.user as any).username,
+        discriminator: (session.user as any).discriminator,
+        avatar: (session.user as any).avatar,
+        email: session.user.email,
+        name: session.user.name,
+        isServerMember: (session.user as any).isServerMember,
+        subscription: (session.user as any).subscription,
+      });
+    } else {
       setUser(null);
     }
+  }, [session]);
+
+  const refreshUser = async () => {
+    // With NextAuth, the session automatically refreshes
+    // This method is kept for compatibility
+    return Promise.resolve();
   };
 
   const login = () => {
-    window.location.href = '/api/auth/discord';
+    signIn('discord');
   };
 
   const logout = async () => {
-    try {
-      await fetch('/api/auth/logout', { method: 'POST' });
-      setUser(null);
-      window.location.href = '/login';
-    } catch (error) {
-      console.error('Logout failed:', error);
-    }
+    await signOut({ callbackUrl: '/login' });
   };
 
   const canAccessPremium = () => {
@@ -86,23 +74,19 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   const grantTestAccess = () => {
+    // For development/testing purposes
     if (user) {
       setUser({
         ...user,
         isServerMember: true,
         subscription: {
           active: true,
-          endDate: TEST_SUBSCRIPTION_EXPIRY,
+          endDate: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000), // 1 year
           plan: 'Test Access'
         }
       });
     }
   };
-
-  // Disabled refreshUser for test user
-  // useEffect(() => {
-  //   refreshUser().finally(() => setLoading(false));
-  // }, []);
 
   return (
     <AuthContext.Provider value={{ user, loading, login, logout, refreshUser, canAccessPremium, grantTestAccess }}>

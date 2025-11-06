@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useUserPreferences } from '@/lib/user-preferences-context';
 
 interface CurrencySettingsModalProps {
   show: boolean;
@@ -26,19 +27,18 @@ const currencies: CurrencyOption[] = [
 ];
 
 export default function CurrencySettingsModal({ show, onHide }: CurrencySettingsModalProps) {
+  const { preferences, updateCurrencyPreferences } = useUserPreferences();
   const [selectedCurrency, setSelectedCurrency] = useState('USD');
   const [displayFormat, setDisplayFormat] = useState<'symbol' | 'code'>('symbol');
   const [isLoading, setIsLoading] = useState(false);
 
   // Load saved preferences when modal opens
   useEffect(() => {
-    if (show) {
-      const savedCurrency = localStorage.getItem('preferred_currency') || 'USD';
-      const savedFormat = localStorage.getItem('currency_display_format') || 'symbol';
-      setSelectedCurrency(savedCurrency);
-      setDisplayFormat(savedFormat as 'symbol' | 'code');
+    if (show && preferences?.currencyPreferences) {
+      setSelectedCurrency(preferences.currencyPreferences.primaryCurrency);
+      setDisplayFormat(preferences.currencyPreferences.displayFormat);
     }
-  }, [show]);
+  }, [show, preferences]);
 
   const handleCurrencyChange = (currencyCode: string) => {
     setSelectedCurrency(currencyCode);
@@ -51,15 +51,10 @@ export default function CurrencySettingsModal({ show, onHide }: CurrencySettings
   const handleSave = async () => {
     setIsLoading(true);
     try {
-      // Save to localStorage (could be extended to save to user preferences)
-      localStorage.setItem('preferred_currency', selectedCurrency);
-      localStorage.setItem('currency_display_format', displayFormat);
-
-      // TODO: Save to user preferences API
-      console.log('Saving currency preferences:', { selectedCurrency, displayFormat });
-
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 500));
+      await updateCurrencyPreferences({
+        primaryCurrency: selectedCurrency,
+        displayFormat,
+      });
 
       onHide();
     } catch (error) {
@@ -175,7 +170,7 @@ export default function CurrencySettingsModal({ show, onHide }: CurrencySettings
 
             <div className="alert alert-info">
               <i className="bi bi-info-circle me-2"></i>
-              <strong>Note:</strong> Currency preferences are saved locally and will be applied across the application.
+              <strong>Note:</strong> Currency preferences are saved to your account and will be applied across all your devices.
             </div>
           </div>
           <div className="modal-footer">

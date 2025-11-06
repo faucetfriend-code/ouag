@@ -3,28 +3,41 @@
  *
  * Mobile-optimized responsive navigation bar with active page highlighting.
  * Features React-managed hamburger menu without Bootstrap JS dependencies.
+ * Enhanced with swipe gestures for mobile: edge swipe to open menu.
  * Provides links to all main sections of the application with accessibility support.
  */
 
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+import { useGesture } from '@use-gesture/react';
+import { lightImpact } from '../lib/haptics';
+import { Bell } from 'lucide-react';
+import NotificationCenter from './NotificationCenter';
 
 export default function Navigation() {
+  const navRef = useRef<HTMLElement>(null);
+
   // Get current route for active link highlighting
   const pathname = usePathname();
 
   // Mobile menu state (React-managed, no Bootstrap JS required)
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [swipeProgress, setSwipeProgress] = useState(0);
+
+  // Notification center state
+  const [isNotificationCenterOpen, setIsNotificationCenterOpen] = useState(false);
+  const [unreadNotificationCount, setUnreadNotificationCount] = useState(0);
 
   // Navigation menu items configuration
   const navItems = [
     { href: '/', label: 'Home', icon: 'bi-house' },
     { href: '/profile', label: 'Profile', icon: 'bi-person' },
     { href: '/tools', label: 'Tools', icon: 'bi-tools' },
-    { href: '/analysts', label: 'Analysts', icon: 'bi-graph-up' }
+    { href: '/analysts', label: 'Analysts', icon: 'bi-graph-up' },
+    { href: '/settings', label: 'Settings', icon: 'bi-gear' }
   ];
 
   // Check if a navigation item should be marked as active
@@ -42,6 +55,27 @@ export default function Navigation() {
     setIsMobileMenuOpen(false);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [pathname]);
+
+  // Fetch unread notification count
+  useEffect(() => {
+    const fetchUnreadCount = async () => {
+      try {
+        const response = await fetch('/api/notifications/history?unreadOnly=true&limit=1');
+        if (response.ok) {
+          const data = await response.json();
+          setUnreadNotificationCount(data.totalCount);
+        }
+      } catch (error) {
+        console.error('Failed to fetch unread notification count:', error);
+      }
+    };
+
+    fetchUnreadCount();
+
+    // Refresh count every 30 seconds
+    const interval = setInterval(fetchUnreadCount, 30000);
+    return () => clearInterval(interval);
+  }, []);
 
   // Close mobile menu when clicking outside
   useEffect(() => {
@@ -68,8 +102,71 @@ export default function Navigation() {
     };
   }, [isMobileMenuOpen]);
 
+  // Edge swipe gesture for mobile menu
+  const bind = useGesture({
+    onDrag: ({ active, movement: [mx], velocity: [vx] }) => {
+      // Only allow swipe from left edge (within 20px of screen edge)
+      if (mx < 0) return; // Only allow rightward swipes from left edge
+
+      const progress = Math.max(0, Math.min(1, mx / 300));
+      setSwipeProgress(progress);
+
+      if (!active && progress > 0.3 && vx > 0.5) {
+        setIsMobileMenuOpen(true);
+        lightImpact(); // Haptic feedback for menu open
+      }
+    },
+    onDragEnd: () => {
+      setSwipeProgress(0);
+    },
+  }, {
+    drag: {
+      axis: 'x',
+      bounds: { left: 0, right: 300 },
+      rubberband: true,
+    },
+  });
+
   return (
-    <nav className="navbar navbar-expand-lg navbar-dark bg-primary shadow-sm" role="navigation" aria-label="Main navigation">
+    <>
+      {/* EDGE SWIPE DETECTOR (invisible overlay for left edge) */}
+      <div
+        {...bind()}
+        className="edge-swipe-detector"
+        style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          width: '20px',
+          height: '100vh',
+          zIndex: 1050,
+          touchAction: 'none',
+        }}
+      />
+
+      {/* SWIPE PROGRESS INDICATOR */}
+      {swipeProgress > 0 && (
+        <div
+          className="swipe-progress"
+          style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            width: `${swipeProgress * 100}%`,
+            height: '4px',
+            background: 'linear-gradient(90deg, var(--primary-orange), var(--accent-yellow))',
+            zIndex: 1060,
+            transition: 'width 0.1s ease-out',
+          }}
+        />
+      )}
+
+      <nav
+        ref={navRef}
+        className="navbar navbar-expand-lg navbar-dark bg-primary shadow-sm"
+        role="navigation"
+        aria-label="Main navigation"
+      >
       <div className="container">
         {/* BRAND LOGO: Clickable link back to home */}
         <Link href="/" className="navbar-brand d-flex align-items-center" aria-label="Unity Oracle Home">
@@ -77,11 +174,31 @@ export default function Navigation() {
           <span className="fw-bold">Unity Oracle</span>
         </Link>
 
+        {/* NOTIFICATION BELL: Desktop notification center toggle */}
+        <div className="d-none d-lg-flex align-items-center me-3">
+          <button
+            onClick={() => setIsNotificationCenterOpen(true)}
+            className="btn btn-link text-white position-relative p-2"
+            aria-label="Open notifications"
+          >
+            <Bell className="h-5 w-5" />
+            {unreadNotificationCount > 0 && (
+              <span className="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">
+                {unreadNotificationCount > 99 ? '99+' : unreadNotificationCount}
+                <span className="visually-hidden">unread notifications</span>
+              </span>
+            )}
+          </button>
+        </div>
+
         {/* MOBILE TOGGLE BUTTON: React-managed hamburger menu */}
         <button
           className="navbar-toggler"
           type="button"
-          onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+          onClick={() => {
+            setIsMobileMenuOpen(!isMobileMenuOpen);
+            lightImpact(); // Haptic feedback for menu toggle
+          }}
           aria-controls="navbarNav"
           aria-expanded={isMobileMenuOpen}
           aria-label="Toggle navigation menu"
@@ -131,6 +248,13 @@ export default function Navigation() {
           aria-hidden="true"
         />
       )}
-    </nav>
+
+      {/* NOTIFICATION CENTER */}
+      <NotificationCenter
+        isOpen={isNotificationCenterOpen}
+        onClose={() => setIsNotificationCenterOpen(false)}
+      />
+      </nav>
+    </>
   );
 }

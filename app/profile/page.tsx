@@ -9,16 +9,28 @@ import RecentActivityFeed from '@/components/RecentActivityFeed';
 import SecuritySettingsModal from '@/components/settings/SecuritySettingsModal';
 import NotificationSettingsModal from '@/components/settings/NotificationSettingsModal';
 import CurrencySettingsModal from '@/components/settings/CurrencySettingsModal';
+import PositionTracker from '@/components/PositionTracker';
+import PortfolioImportModal from '@/components/PortfolioImportModal';
 
-const portfolio = [
-  { token: 'BTC', amount: 0.5, value: 29375, change24h: 2.34 },
-  { token: 'ETH', amount: 5.2, value: 10140, change24h: 1.67 },
-  { token: 'ADA', amount: 2500, value: 1050, change24h: -0.89 },
-  { token: 'SOL', amount: 25, value: 745, change24h: 4.21 }
-];
+interface PortfolioHolding {
+  id: string;
+  token: string;
+  amount: number;
+  avgPrice: number;
+  currentPrice: number;
+  value: number;
+  change24h: number;
+  createdAt: string;
+  updatedAt: string;
+}
 
-const totalPortfolioValue = portfolio.reduce((sum, holding) => sum + holding.value, 0);
-const totalChange24h = portfolio.reduce((sum, holding) => sum + (holding.value * holding.change24h / 100), 0);
+interface PortfolioData {
+  id: string | null;
+  totalValue: number;
+  totalChange24h: number;
+  holdings: PortfolioHolding[];
+  lastUpdated: string;
+}
 
 export default function ProfilePage() {
   const { user, login, logout, loading, grantTestAccess } = useAuth();
@@ -29,6 +41,63 @@ export default function ProfilePage() {
   const [showSecurityModal, setShowSecurityModal] = useState(false);
   const [showNotificationModal, setShowNotificationModal] = useState(false);
   const [showCurrencyModal, setShowCurrencyModal] = useState(false);
+  const [showImportModal, setShowImportModal] = useState(false);
+
+  // Portfolio state
+  const [portfolio, setPortfolio] = useState<PortfolioData>({
+    id: null,
+    totalValue: 0,
+    totalChange24h: 0,
+    holdings: [],
+    lastUpdated: ''
+  });
+  const [portfolioLoading, setPortfolioLoading] = useState(false);
+
+  // Load portfolio data
+  const loadPortfolio = async () => {
+    if (!user) return;
+
+    setPortfolioLoading(true);
+    try {
+      const response = await fetch('/api/portfolio');
+      if (response.ok) {
+        const data = await response.json();
+        setPortfolio(data);
+      }
+    } catch (error) {
+      console.error('Error loading portfolio:', error);
+    } finally {
+      setPortfolioLoading(false);
+    }
+  };
+
+  // Refresh portfolio prices
+  const refreshPortfolio = async () => {
+    try {
+      const response = await fetch('/api/portfolio/refresh', {
+        method: 'POST'
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        setPortfolio(prev => ({
+          ...prev,
+          totalValue: data.totalValue,
+          totalChange24h: data.totalChange24h,
+          holdings: data.holdings,
+          lastUpdated: data.lastUpdated
+        }));
+      }
+    } catch (error) {
+      console.error('Error refreshing portfolio:', error);
+    }
+  };
+
+  useEffect(() => {
+    if (user) {
+      loadPortfolio();
+    }
+  }, [user]);
 
   if (loading) {
     return (
@@ -114,18 +183,24 @@ export default function ProfilePage() {
                    )}
                  </div>
                   <div>
-                    {!user.subscription?.active && (
-                      <div className="d-flex gap-2">
-                        <button className="btn btn-primary" onClick={grantTestAccess}>
-                          <i className="bi bi-star me-2"></i>
-                          Grant Test Access
-                        </button>
-                        <button className="btn btn-outline-primary">
-                          <i className="bi bi-credit-card me-2"></i>
-                          Subscribe Now
-                        </button>
-                      </div>
-                    )}
+                  {!user.subscription?.active && (
+                    <div className="d-flex gap-2">
+                      <button className="btn btn-primary" onClick={grantTestAccess}>
+                        <i className="bi bi-star me-2"></i>
+                        Grant Test Access
+                      </button>
+                      <Link href="/settings/subscription" className="btn btn-outline-primary">
+                        <i className="bi bi-credit-card me-2"></i>
+                        Subscribe Now
+                      </Link>
+                    </div>
+                  )}
+                  {user.subscription?.active && (
+                    <Link href="/settings/subscription" className="btn btn-outline-primary">
+                      <i className="bi bi-gear me-2"></i>
+                      Manage Subscription
+                    </Link>
+                  )}
                   </div>
                </div>
              </div>
@@ -204,67 +279,155 @@ export default function ProfilePage() {
            </div>
         </div>
 
-        {/* Portfolio Overview */}
-        <div className="col-lg-8">
+         {/* Portfolio Overview */}
+         <div className="col-lg-8">
+           <div className="card mb-4">
+             <div className="card-header d-flex justify-content-between align-items-center">
+               <h5 className="mb-0">Portfolio Overview</h5>
+               <div className="d-flex gap-2">
+                 <button
+                   className="btn btn-outline-primary btn-sm"
+                   onClick={() => setShowImportModal(true)}
+                 >
+                   <i className="bi bi-upload me-1"></i>
+                   Import
+                 </button>
+                 <button
+                   className="btn btn-outline-secondary btn-sm"
+                   onClick={refreshPortfolio}
+                   disabled={portfolioLoading}
+                 >
+                   {portfolioLoading ? (
+                     <span className="spinner-border spinner-border-sm me-1" role="status"></span>
+                   ) : (
+                     <i className="bi bi-arrow-clockwise me-1"></i>
+                   )}
+                   Refresh
+                 </button>
+               </div>
+             </div>
+             <div className="card-body">
+               {portfolio.holdings.length === 0 ? (
+                 <div className="text-center py-5">
+                   <i className="bi bi-pie-chart display-4 text-secondary mb-3"></i>
+                   <h5 className="text-secondary">No Portfolio Data</h5>
+                   <p className="text-secondary mb-3">Import your portfolio to start tracking your investments</p>
+                   <button
+                     className="btn btn-primary"
+                     onClick={() => setShowImportModal(true)}
+                   >
+                     <i className="bi bi-upload me-2"></i>
+                     Import Portfolio
+                   </button>
+                 </div>
+               ) : (
+                 <>
+                   <div className="row mb-3">
+                     <div className="col-md-6">
+                       <div className="text-center">
+                         <div className="h4 mb-0">{formatCurrency(portfolio.totalValue)}</div>
+                         <small className="text-secondary">Total Value</small>
+                       </div>
+                     </div>
+                     <div className="col-md-6">
+                       <div className="text-center">
+                         <div className={`h4 mb-0 ${getPriceClass(portfolio.totalChange24h)}`}>
+                           {portfolio.totalChange24h >= 0 ? '+' : ''}{formatCurrency(portfolio.totalChange24h)}
+                         </div>
+                         <small className="text-secondary">24h Change</small>
+                       </div>
+                     </div>
+                   </div>
+
+                   <div className="table-responsive">
+                     <table className="table table-hover">
+                       <thead>
+                         <tr>
+                           <th>Asset</th>
+                           <th className="text-end">Holdings</th>
+                           <th className="text-end">Avg Price</th>
+                           <th className="text-end">Current Price</th>
+                           <th className="text-end">Value</th>
+                           <th className="text-end">24h Change</th>
+                           <th className="text-end">Allocation</th>
+                         </tr>
+                       </thead>
+                       <tbody>
+                         {portfolio.holdings.map((holding) => (
+                           <tr key={holding.id}>
+                             <td>
+                               <div className="d-flex align-items-center">
+                                 <div className="bg-light rounded-circle d-flex align-items-center justify-content-center me-2"
+                                      style={{ width: '32px', height: '32px', fontSize: '0.8rem', fontWeight: 'bold' }}>
+                                   {holding.token.slice(0, 2)}
+                                 </div>
+                                 <div>
+                                   <div className="fw-bold">{holding.token}</div>
+                                   <small className="text-secondary">{holding.amount.toFixed(8)} {holding.token}</small>
+                                 </div>
+                               </div>
+                             </td>
+                             <td className="text-end">
+                               <div>{holding.amount.toFixed(8)}</div>
+                               <small className="text-secondary">{holding.token}</small>
+                             </td>
+                             <td className="text-end">
+                               {formatCurrency(holding.avgPrice)}
+                             </td>
+                             <td className="text-end fw-bold">
+                               {holding.currentPrice > 0 ? formatCurrency(holding.currentPrice) : 'N/A'}
+                             </td>
+                             <td className="text-end fw-bold">
+                               {formatCurrency(holding.value)}
+                             </td>
+                             <td className={`text-end ${getPriceClass(holding.change24h)}`}>
+                               {holding.change24h !== 0 ? (
+                                 <>
+                                   {holding.change24h >= 0 ? '+' : ''}{holding.change24h.toFixed(2)}%
+                                 </>
+                               ) : (
+                                 <span className="text-secondary">-</span>
+                               )}
+                             </td>
+                             <td className="text-end">
+                               {portfolio.totalValue > 0 ? ((holding.value / portfolio.totalValue) * 100).toFixed(1) : '0.0'}%
+                             </td>
+                           </tr>
+                         ))}
+                       </tbody>
+                     </table>
+                   </div>
+
+                   {portfolio.lastUpdated && (
+                     <div className="text-center mt-3">
+                       <small className="text-secondary">
+                         Last updated: {new Date(portfolio.lastUpdated).toLocaleString()}
+                       </small>
+                     </div>
+                   )}
+                 </>
+               )}
+             </div>
+           </div>
+
+          {/* Position Tracker */}
           <div className="card mb-4">
             <div className="card-header d-flex justify-content-between align-items-center">
-              <h5 className="mb-0">Portfolio Overview</h5>
-              <div className="text-end">
-                <div className="h5 mb-0">{formatCurrency(totalPortfolioValue)}</div>
-                <small className={`fw-bold ${getPriceClass(totalChange24h)}`}>
-                  {totalChange24h >= 0 ? '+' : ''}{formatCurrency(totalChange24h)} (24h)
-                </small>
-              </div>
+              <h5 className="mb-0">
+                <i className="bi bi-lightning-charge me-2"></i>
+                Leveraged Positions
+              </h5>
+              <button className="btn btn-primary btn-sm">
+                <i className="bi bi-plus-circle me-2"></i>
+                Add Position
+              </button>
             </div>
             <div className="card-body">
-              <div className="table-responsive">
-                <table className="table table-hover">
-                  <thead>
-                    <tr>
-                      <th>Asset</th>
-                      <th className="text-end">Holdings</th>
-                      <th className="text-end">Value</th>
-                      <th className="text-end">24h Change</th>
-                      <th className="text-end">Allocation</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {portfolio.map((holding) => (
-                      <tr key={holding.token}>
-                        <td>
-                          <div className="d-flex align-items-center">
-                            <div className="bg-light rounded-circle d-flex align-items-center justify-content-center me-2"
-                                 style={{ width: '32px', height: '32px', fontSize: '0.8rem', fontWeight: 'bold' }}>
-                              {holding.token.slice(0, 2)}
-                            </div>
-                            <div>
-                              <div className="fw-bold">{holding.token}</div>
-                               <small className="text-secondary">{holding.amount} {holding.token}</small>
-                            </div>
-                          </div>
-                        </td>
-                        <td className="text-end">
-                          <div>{holding.amount}</div>
-                           <small className="text-secondary">{holding.token}</small>
-                        </td>
-                        <td className="text-end fw-bold">
-                          {formatCurrency(holding.value)}
-                        </td>
-                        <td className={`text-end ${getPriceClass(holding.change24h)}`}>
-                          {holding.change24h >= 0 ? '+' : ''}{holding.change24h.toFixed(2)}%
-                        </td>
-                        <td className="text-end">
-                          {((holding.value / totalPortfolioValue) * 100).toFixed(1)}%
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
+              <PositionTracker />
             </div>
           </div>
 
-           {/* Trading Preferences */}
+            {/* Trading Preferences */}
            <div className="card mb-4">
              <div className="card-header">
                <h5 className="mb-0">Trading Preferences</h5>
@@ -453,19 +616,24 @@ export default function ProfilePage() {
         </div>
       </div>
 
-      {/* Settings Modals */}
-      <SecuritySettingsModal
-        show={showSecurityModal}
-        onHide={() => setShowSecurityModal(false)}
-      />
-      <NotificationSettingsModal
-        show={showNotificationModal}
-        onHide={() => setShowNotificationModal(false)}
-      />
-      <CurrencySettingsModal
-        show={showCurrencyModal}
-        onHide={() => setShowCurrencyModal(false)}
-      />
-    </div>
-  );
-}
+       {/* Settings Modals */}
+       <SecuritySettingsModal
+         show={showSecurityModal}
+         onHide={() => setShowSecurityModal(false)}
+       />
+       <NotificationSettingsModal
+         show={showNotificationModal}
+         onHide={() => setShowNotificationModal(false)}
+       />
+       <CurrencySettingsModal
+         show={showCurrencyModal}
+         onHide={() => setShowCurrencyModal(false)}
+       />
+       <PortfolioImportModal
+         show={showImportModal}
+         onHide={() => setShowImportModal(false)}
+         onImportComplete={loadPortfolio}
+       />
+     </div>
+   );
+ }

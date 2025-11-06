@@ -1,0 +1,279 @@
+// Prisma schema for Unity Oracle Aggregator
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String?
+  access_token      String?
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String?
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model User {
+  id                String              @id @default(cuid())
+  name              String?
+  email             String              @unique
+  emailVerified     DateTime?
+  image             String?
+  discordId         String?             @unique
+  username          String?
+  discriminator     String?
+  avatar            String?
+  isServerMember    Boolean             @default(false)
+  createdAt         DateTime            @default(now())
+  updatedAt         DateTime            @updatedAt
+
+  accounts          Account[]
+  sessions          Session[]
+  preferences       UserPreferences?
+  subscription      Subscription?
+  followedAnalysts  FollowedAnalyst[]
+  portfolio         Portfolio?
+  trades            Trade[]
+  openPositions     OpenPosition[]
+  monthlyPnLs       MonthlyPnL[]
+  notificationTokens NotificationToken[]
+  notifications     Notification[]
+}
+
+model UserPreferences {
+  id                    String   @id @default(cuid())
+  userId                String   @unique
+  currency              String   @default("USD")
+  timezone              String   @default("UTC")
+  theme                 String   @default("light")
+  language              String   @default("en")
+
+  // Notification preferences
+  emailNotifications    Boolean  @default(true)
+  pushNotifications     Boolean  @default(true)
+  smsNotifications      Boolean  @default(false)
+  priceAlerts           Boolean  @default(true)
+  analystUpdates        Boolean  @default(true)
+  marketNews            Boolean  @default(true)
+  weeklyDigest          Boolean  @default(true)
+
+  // Trading preferences
+  riskTolerance         String   @default("moderate") // conservative, moderate, aggressive
+  defaultTimeframe      String   @default("1D") // 1H, 4H, 1D, 1W, 1M
+  favoriteTokens        String[] // Array of token symbols
+
+  // Privacy settings
+  profileVisibility     String   @default("public") // public, followers, private
+  dataSharing           Boolean  @default(false)
+  analyticsTracking     Boolean  @default(true)
+
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Subscription {
+  id            String   @id @default(cuid())
+  userId        String   @unique
+  status        String   @default("inactive") // active, inactive, cancelled, expired
+  plan          String   @default("free") // free, premium, pro
+  stripeId      String?  @unique
+  currentPeriodStart DateTime?
+  currentPeriodEnd   DateTime?
+  cancelAtPeriodEnd  Boolean  @default(false)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model FollowedAnalyst {
+  id         String   @id @default(cuid())
+  userId     String
+  analystId  String   // Reference to analyst in Redis
+  createdAt  DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, analystId])
+}
+
+model Portfolio {
+  id            String           @id @default(cuid())
+  userId        String           @unique
+  totalValue    Float            @default(0)
+  totalChange24h Float           @default(0)
+  holdings      PortfolioHolding[]
+  createdAt     DateTime         @default(now())
+  updatedAt     DateTime         @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model PortfolioHolding {
+  id        String   @id @default(cuid())
+  portfolioId String
+  token     String   // Token symbol
+  amount    Float
+  avgPrice  Float
+  currentPrice Float  @default(0)
+  value     Float    @default(0)
+  change24h Float    @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  portfolio Portfolio @relation(fields: [portfolioId], references: [id], onDelete: Cascade)
+
+  @@unique([portfolioId, token])
+}
+
+model Trade {
+  id          String   @id @default(cuid())
+  userId      String
+  token       String   // Token symbol (e.g., "BTC", "ETH")
+  side        String   // "buy", "sell", "long", "short"
+  amount      Float    // Base amount of tokens
+  price       Float    // Entry price per token
+  totalValue  Float    // Total value (amount * price)
+
+  // Leveraged Position Fields
+  leverage    Float?   // Leverage ratio (e.g., 5x, 10x)
+  margin      Float?   // Margin used for position
+  liquidationPrice Float? // Liquidation price for leveraged positions
+  positionType String? // "spot", "margin", "futures", "perpetual"
+
+  fee         Float    @default(0)
+  feeCurrency String   @default("USD")
+  exchange    String?
+  notes       String?
+  executedAt  DateTime // When the trade was executed
+  closedAt    DateTime? // For tracking position closure
+  exitPrice   Float?   // Exit price for closed positions
+  exitValue   Float?   // Exit value for closed positions
+  realizedPnL Float?   // Realized profit/loss
+
+  // Monthly tracking
+  monthYear   String   // Format: "2024-11" for November 2024
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+   openPosition OpenPosition?
+
+   @@index([userId, executedAt])
+   @@index([userId, token])
+   @@index([userId, positionType])
+   @@index([userId, monthYear])
+}
+
+model OpenPosition {
+  id              String   @id @default(cuid())
+  userId          String
+  tradeId         String   @unique // Reference to opening trade
+  token           String
+  side            String   // "long", "short"
+  amount          Float
+  entryPrice      Float
+  leverage        Float
+  margin          Float
+  liquidationPrice Float
+  unrealizedPnL   Float    @default(0)
+  currentPrice    Float    @default(0)
+  status          String   @default("open") // "open", "closing", "closed"
+  exchange        String?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  trade Trade @relation(fields: [tradeId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, tradeId])
+  @@index([userId, status])
+}
+
+model MonthlyPnL {
+  id              String   @id @default(cuid())
+  userId          String
+  monthYear       String   // Format: "2024-11" for November 2024
+  totalTrades     Int      @default(0)
+  winningTrades   Int      @default(0)
+  losingTrades    Int      @default(0)
+  totalPnL        Float    @default(0)
+  totalVolume     Float    @default(0)
+  totalFees       Float    @default(0)
+  winRate         Float    @default(0) // Percentage
+  avgWin          Float?   // Average winning trade
+  avgLoss         Float?   // Average losing trade
+  largestWin      Float    @default(0)
+  largestLoss     Float    @default(0)
+  sharpeRatio     Float?   // Risk-adjusted return
+  maxDrawdown     Float    @default(0)
+  status          String   @default("active") // "active", "finalized"
+  finalizedAt     DateTime?
+
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, monthYear])
+  @@index([userId, status])
+}
+
+model NotificationToken {
+  id        String   @id @default(cuid())
+  userId    String
+  token     String   @unique
+  platform  String   // "web", "ios", "android"
+  lastUsed  DateTime @default(now())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, token])
+  @@index([userId, platform])
+}
+
+model Notification {
+  id        String   @id @default(cuid())
+  userId    String
+  title     String
+  body      String
+  type      String   // "price_alert", "portfolio_update", "news", "system"
+  priority  String   @default("normal") // "low", "normal", "high"
+  data      Json?    // Additional notification data
+  read      Boolean  @default(false)
+  sentAt    DateTime @default(now())
+  readAt    DateTime?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, read])
+  @@index([userId, type])
+  @@index([userId, sentAt])
+}

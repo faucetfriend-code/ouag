@@ -1,48 +1,80 @@
 /**
- * Redis Database Service
+ * Redis Database Service (Dual-Mode)
  *
  * Handles all database operations for the Unity Oracle Aggregator using Redis.
  * Stores trading posts, chart data, and analysis summaries.
+ *
+ * Supports two modes:
+ * - TCP Mode: Redis Cloud (local development, unlimited commands)
+ * - REST Mode: Vercel KV (serverless deployment, 3K commands/day free)
+ *
+ * Mode is automatically selected based on environment:
+ * - VERCEL env var present → REST mode (Vercel KV)
+ * - No VERCEL env var → TCP mode (Redis Cloud)
  */
 
 import { createClient, RedisClientType } from 'redis';
+import { Redis as UpstashRedis } from '@upstash/redis';
 import { mockTradingPosts } from '../data/mockData';
 import { ProcessedPost } from './workflow';
 
+type RedisMode = 'tcp' | 'rest';
+
 class RedisService {
-  private client: RedisClientType;
+  private client: RedisClientType | null = null;
+  private restClient: UpstashRedis | null = null;
+  private mode: RedisMode;
   private isConnected: boolean = false;
 
   constructor() {
-    this.client = createClient({
-      url: process.env.REDIS_URL || 'redis://localhost:6379'
-    });
+    // Detect environment and choose appropriate Redis client
+    const isVercel = !!process.env.VERCEL;
+    this.mode = isVercel ? 'rest' : 'tcp';
 
-    this.client.on('error', (err) => console.error('Redis Client Error', err));
-    this.client.on('connect', () => {
-      console.log('Connected to Redis');
-      this.isConnected = true;
-    });
-    this.client.on('disconnect', () => {
-      console.log('Disconnected from Redis');
-      this.isConnected = false;
-    });
+    if (this.mode === 'rest') {
+      // Vercel serverless: use REST API (Vercel KV)
+      const url = process.env.UAO_KV_REST_API_URL;
+      const token = process.env.UAO_KV_REST_API_TOKEN;
+
+      if (!url || !token) {
+        console.error('Vercel KV credentials missing. Set UAO_KV_REST_API_URL and UAO_KV_REST_API_TOKEN');
+        throw new Error('Vercel KV credentials not configured');
+      }
+
+      this.restClient = new UpstashRedis({ url, token });
+      this.isConnected = true; // REST client doesn't need explicit connection
+      console.log('Using Vercel KV (REST mode)');
+    } else {
+      // Local development: use TCP connection (Redis Cloud)
+      const url = process.env.REDIS_URL || 'redis://localhost:6379';
+      this.client = createClient({ url });
+
+      this.client.on('error', (err) => console.error('Redis Client Error', err));
+      this.client.on('connect', () => {
+        console.log('Connected to Redis Cloud (TCP mode)');
+        this.isConnected = true;
+      });
+      this.client.on('disconnect', () => {
+        console.log('Disconnected from Redis Cloud');
+        this.isConnected = false;
+      });
+    }
   }
 
   /**
-   * Initialize Redis connection
+   * Initialize Redis connection (TCP mode only, REST is always connected)
    */
   async connect(): Promise<void> {
-    if (!this.isConnected) {
+    if (this.mode === 'tcp' && !this.isConnected && this.client) {
       await this.client.connect();
     }
   }
 
   /**
-   * Close Redis connection
+   * Close Redis connection (TCP mode only)
    */
   async disconnect(): Promise<void> {
-    if (this.isConnected) {
+    if (this.mode === 'tcp' && this.isConnected && this.client) {
       await this.client.disconnect();
     }
   }
@@ -60,20 +92,25 @@ class RedisService {
       storedAt: new Date().toISOString()
     });
 
-    // Store post data
-    await this.client.set(key, data);
-
-    // Add to token index
-    await this.client.sAdd(`token:${post.token}:posts`, post.id);
-
-    // Add to user index
-    await this.client.sAdd(`user:${post.user}:posts`, post.id);
-
-    // Add to timeline (sorted set by timestamp)
-    await this.client.zAdd(`timeline:${post.token}`, {
-      score: post.timestamp.getTime(),
-      value: post.id
-    });
+    if (this.mode === 'rest' && this.restClient) {
+      // REST mode: Vercel KV
+      await this.restClient.set(key, data);
+      await this.restClient.sadd(`token:${post.token}:posts`, post.id);
+      await this.restClient.sadd(`user:${post.user}:posts`, post.id);
+      await this.restClient.zadd(`timeline:${post.token}`, {
+        score: post.timestamp.getTime(),
+        member: post.id
+      });
+    } else if (this.mode === 'tcp' && this.client) {
+      // TCP mode: Redis Cloud
+      await this.client.set(key, data);
+      await this.client.sAdd(`token:${post.token}:posts`, post.id);
+      await this.client.sAdd(`user:${post.user}:posts`, post.id);
+      await this.client.zAdd(`timeline:${post.token}`, {
+        score: post.timestamp.getTime(),
+        value: post.id
+      });
+    }
 
     // Update chart data if available
     if (post.chartData) {
@@ -97,7 +134,12 @@ class RedisService {
       lastUpdated: new Date().toISOString()
     });
 
-    await this.client.set(key, data);
+    if (this.mode === 'rest' && this.restClient) {
+      await this.restClient.set(key, data);
+    } else if (this.mode === 'tcp' && this.client) {
+      await this.client.set(key, data);
+    }
+
     console.log(`Updated chart data for ${token}`);
   }
 
@@ -109,7 +151,13 @@ class RedisService {
     await this.connect();
 
     const key = `post:${postId}`;
-    const existingData = await this.client.get(key);
+    let existingData: string | null = null;
+
+    if (this.mode === 'rest' && this.restClient) {
+      existingData = await this.restClient.get(key);
+    } else if (this.mode === 'tcp' && this.client) {
+      existingData = await this.client.get(key);
+    }
 
     if (!existingData) {
       throw new Error(`Post ${postId} not found`);
@@ -120,7 +168,14 @@ class RedisService {
     post.analysis = analysis.summary;
     post.updatedAt = new Date().toISOString();
 
-    await this.client.set(key, JSON.stringify(post));
+    const updatedData = JSON.stringify(post);
+
+    if (this.mode === 'rest' && this.restClient) {
+      await this.restClient.set(key, updatedData);
+    } else if (this.mode === 'tcp' && this.client) {
+      await this.client.set(key, updatedData);
+    }
+
     console.log(`Updated analysis for post ${postId}`);
   }
 
@@ -131,7 +186,15 @@ class RedisService {
   async getPostsByToken(token: string, limit: number = 50): Promise<ProcessedPost[]> {
     await this.connect();
 
-    const postIds = await this.client.zRange(`timeline:${token}`, 0, limit - 1, { REV: true });
+    let postIds: string[] = [];
+
+    if (this.mode === 'rest' && this.restClient) {
+      // REST mode: zrange returns array directly
+      postIds = await this.restClient.zrange(`timeline:${token}`, 0, limit - 1, { rev: true });
+    } else if (this.mode === 'tcp' && this.client) {
+      // TCP mode: uses REV option
+      postIds = await this.client.zRange(`timeline:${token}`, 0, limit - 1, { REV: true });
+    }
 
     if (postIds.length === 0) {
       return [];
@@ -139,7 +202,14 @@ class RedisService {
 
     const posts: ProcessedPost[] = [];
     for (const postId of postIds) {
-      const data = await this.client.get(`post:${postId}`);
+      let data: string | null = null;
+
+      if (this.mode === 'rest' && this.restClient) {
+        data = await this.restClient.get(`post:${postId}`);
+      } else if (this.mode === 'tcp' && this.client) {
+        data = await this.client.get(`post:${postId}`);
+      }
+
       if (data) {
         const post = JSON.parse(data);
         // Convert timestamp back to Date object
@@ -158,7 +228,14 @@ class RedisService {
   async getChartData(token: string): Promise<number[] | null> {
     await this.connect();
 
-    const data = await this.client.get(`chart:${token}`);
+    let data: string | null = null;
+
+    if (this.mode === 'rest' && this.restClient) {
+      data = await this.restClient.get(`chart:${token}`);
+    } else if (this.mode === 'tcp' && this.client) {
+      data = await this.client.get(`chart:${token}`);
+    }
+
     if (!data) return null;
 
     const chartData = JSON.parse(data);
@@ -172,7 +249,14 @@ class RedisService {
   async getPostById(postId: string): Promise<ProcessedPost | null> {
     await this.connect();
 
-    const data = await this.client.get(`post:${postId}`);
+    let data: string | null = null;
+
+    if (this.mode === 'rest' && this.restClient) {
+      data = await this.restClient.get(`post:${postId}`);
+    } else if (this.mode === 'tcp' && this.client) {
+      data = await this.client.get(`post:${postId}`);
+    }
+
     if (!data) return null;
 
     const post = JSON.parse(data);
@@ -188,7 +272,14 @@ class RedisService {
     await this.connect();
 
     // Get all tokens
-    const tokenKeys = await this.client.keys('timeline:*');
+    let tokenKeys: string[] = [];
+
+    if (this.mode === 'rest' && this.restClient) {
+      tokenKeys = await this.restClient.keys('timeline:*');
+    } else if (this.mode === 'tcp' && this.client) {
+      tokenKeys = await this.client.keys('timeline:*');
+    }
+
     const tokens = tokenKeys.map(key => key.replace('timeline:', ''));
 
     // Get recent posts from each token
@@ -216,15 +307,32 @@ class RedisService {
   }> {
     await this.connect();
 
-    const postKeys = await this.client.keys('post:*');
-    const userKeys = await this.client.keys('user:*:posts');
-    const tokenKeys = await this.client.keys('timeline:*');
+    let postKeys: string[] = [];
+    let userKeys: string[] = [];
+    let tokenKeys: string[] = [];
+
+    if (this.mode === 'rest' && this.restClient) {
+      postKeys = await this.restClient.keys('post:*');
+      userKeys = await this.restClient.keys('user:*:posts');
+      tokenKeys = await this.restClient.keys('timeline:*');
+    } else if (this.mode === 'tcp' && this.client) {
+      postKeys = await this.client.keys('post:*');
+      userKeys = await this.client.keys('user:*:posts');
+      tokenKeys = await this.client.keys('timeline:*');
+    }
 
     let latestUpdate: Date | null = null;
 
     // Find latest post timestamp
     for (const postKey of postKeys.slice(0, 10)) { // Check first 10 posts
-      const data = await this.client.get(postKey);
+      let data: string | null = null;
+
+      if (this.mode === 'rest' && this.restClient) {
+        data = await this.restClient.get(postKey);
+      } else if (this.mode === 'tcp' && this.client) {
+        data = await this.client.get(postKey);
+      }
+
       if (data) {
         const post = JSON.parse(data);
         const postDate = new Date(post.timestamp);
@@ -267,7 +375,12 @@ class RedisService {
         extractedData: {
           tokens: [mockPost.token],
           sentiment: 'neutral',
-          confidence: 0.5
+          confidence: 0.5,
+          author: {
+            id: 'mock-user',
+            username: mockPost.user
+          },
+          platform: 'manual'
         },
         chartData: mockPost.chartData
       };
@@ -285,10 +398,20 @@ class RedisService {
   async clearAllData(): Promise<void> {
     await this.connect();
 
-    const keys = await this.client.keys('*');
-    if (keys.length > 0) {
-      await this.client.del(keys);
+    let keys: string[] = [];
+
+    if (this.mode === 'rest' && this.restClient) {
+      keys = await this.restClient.keys('*');
+      if (keys.length > 0) {
+        await this.restClient.del(...keys);
+      }
+    } else if (this.mode === 'tcp' && this.client) {
+      keys = await this.client.keys('*');
+      if (keys.length > 0) {
+        await this.client.del(keys);
+      }
     }
+
     console.log('All data cleared');
   }
 
@@ -298,9 +421,16 @@ class RedisService {
    */
   async invalidateTokenCache(token: string): Promise<void> {
     await this.connect();
-    await this.client.set(`cache:invalidate:${token}`, Date.now().toString(), {
-      EX: 300 // Expire in 5 minutes
-    });
+
+    const key = `cache:invalidate:${token}`;
+    const value = Date.now().toString();
+
+    if (this.mode === 'rest' && this.restClient) {
+      await this.restClient.set(key, value, { ex: 300 });
+    } else if (this.mode === 'tcp' && this.client) {
+      await this.client.set(key, value, { EX: 300 });
+    }
+
     console.log(`Invalidated cache for token: ${token}`);
   }
 
@@ -310,7 +440,13 @@ class RedisService {
    */
   async invalidateStatsCache(): Promise<void> {
     await this.connect();
-    await this.client.del('cache:stats');
+
+    if (this.mode === 'rest' && this.restClient) {
+      await this.restClient.del('cache:stats');
+    } else if (this.mode === 'tcp' && this.client) {
+      await this.client.del('cache:stats');
+    }
+
     console.log('Invalidated global stats cache');
   }
 
@@ -321,10 +457,20 @@ class RedisService {
   async healthCheck(): Promise<boolean> {
     try {
       await this.connect();
-      await this.client.set('health_check', 'ok');
-      const result = await this.client.get('health_check');
-      await this.client.del('health_check');
-      return result === 'ok';
+
+      if (this.mode === 'rest' && this.restClient) {
+        await this.restClient.set('health_check', 'ok');
+        const result = await this.restClient.get('health_check');
+        await this.restClient.del('health_check');
+        return result === 'ok';
+      } else if (this.mode === 'tcp' && this.client) {
+        await this.client.set('health_check', 'ok');
+        const result = await this.client.get('health_check');
+        await this.client.del('health_check');
+        return result === 'ok';
+      }
+
+      return false;
     } catch (error) {
       console.error('Redis health check failed:', error);
       return false;
@@ -338,22 +484,46 @@ class RedisService {
 
   async set(key: string, value: string): Promise<void> {
     await this.connect();
-    await this.client.set(key, value);
+
+    if (this.mode === 'rest' && this.restClient) {
+      await this.restClient.set(key, value);
+    } else if (this.mode === 'tcp' && this.client) {
+      await this.client.set(key, value);
+    }
   }
 
   async get(key: string): Promise<string | null> {
     await this.connect();
-    return await this.client.get(key);
+
+    if (this.mode === 'rest' && this.restClient) {
+      return await this.restClient.get(key);
+    } else if (this.mode === 'tcp' && this.client) {
+      return await this.client.get(key);
+    }
+
+    return null;
   }
 
   async del(key: string): Promise<void> {
     await this.connect();
-    await this.client.del(key);
+
+    if (this.mode === 'rest' && this.restClient) {
+      await this.restClient.del(key);
+    } else if (this.mode === 'tcp' && this.client) {
+      await this.client.del(key);
+    }
   }
 
   async keys(pattern: string): Promise<string[]> {
     await this.connect();
-    return await this.client.keys(pattern);
+
+    if (this.mode === 'rest' && this.restClient) {
+      return await this.restClient.keys(pattern);
+    } else if (this.mode === 'tcp' && this.client) {
+      return await this.client.keys(pattern);
+    }
+
+    return [];
   }
 }
 

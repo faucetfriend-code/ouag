@@ -2,53 +2,157 @@
 
 import { useState, useEffect } from 'react';
 import { useUserPreferences } from '@/lib/user-preferences-context';
+import { showSuccess, showError } from '@/lib/toast';
 
 interface NotificationSettingsModalProps {
   show: boolean;
   onHide: () => void;
 }
 
+interface NotificationSettings {
+  // Market & Portfolio
+  priceAlerts: boolean;
+  portfolioUpdates: boolean;
+  liquidationAlerts: boolean;
+  fundingRateAlerts: boolean;
+
+  // Analyst & Content
+  analystInsights: boolean;
+  newsAlerts: boolean;
+  airdropAlerts: boolean;
+
+  // System & Security
+  systemUpdates: boolean;
+  securityAlerts: boolean;
+  loginNotifications: boolean;
+
+  // Delivery Methods
+  pushEnabled: boolean;
+  emailEnabled: boolean;
+  smsEnabled: boolean;
+
+  // Frequency & Timing
+  notificationFrequency: 'immediate' | 'hourly' | 'daily';
+  quietHoursEnabled: boolean;
+  quietHoursStart: string;
+  quietHoursEnd: string;
+}
+
 export default function NotificationSettingsModal({ show, onHide }: NotificationSettingsModalProps) {
   const { preferences, updateNotificationSettings } = useUserPreferences();
-  const [localSettings, setLocalSettings] = useState({
+  const [settings, setSettings] = useState<NotificationSettings>({
     priceAlerts: false,
+    portfolioUpdates: false,
+    liquidationAlerts: false,
+    fundingRateAlerts: false,
     analystInsights: false,
+    newsAlerts: false,
+    airdropAlerts: false,
+    systemUpdates: false,
+    securityAlerts: false,
+    loginNotifications: false,
     pushEnabled: false,
+    emailEnabled: false,
+    smsEnabled: false,
+    notificationFrequency: 'immediate',
+    quietHoursEnabled: false,
+    quietHoursStart: '22:00',
+    quietHoursEnd: '08:00',
   });
   const [isLoading, setIsLoading] = useState(false);
 
-  // Sync local state with preferences when modal opens
+  // Load notification settings when modal opens
   useEffect(() => {
-    if (show && preferences?.notificationSettings) {
-      setLocalSettings({
-        priceAlerts: preferences.notificationSettings.priceAlerts || false,
-        analystInsights: preferences.notificationSettings.analystInsights || false,
-        pushEnabled: preferences.notificationSettings.pushEnabled || false,
-      });
+    if (show) {
+      loadNotificationSettings();
     }
-  }, [show, preferences]);
+  }, [show]);
 
-  const handleSettingChange = (setting: keyof typeof localSettings) => {
-    const newSettings = {
-      ...localSettings,
-      [setting]: !localSettings[setting]
-    };
-    setLocalSettings(newSettings);
+  const loadNotificationSettings = async () => {
+    try {
+      // INSERTAPIHERE: Fetch comprehensive notification settings
+      const response = await fetch('/api/notifications/settings');
+      if (response.ok) {
+        const data = await response.json();
+        setSettings(data);
+      } else if (preferences?.notificationSettings) {
+        // Fallback to basic preferences
+        setSettings(prev => ({
+          ...prev,
+          priceAlerts: preferences.notificationSettings.priceAlerts || false,
+          analystInsights: preferences.notificationSettings.analystInsights || false,
+          pushEnabled: preferences.notificationSettings.pushEnabled || false,
+        }));
+      }
+    } catch (error) {
+      console.error('Failed to load notification settings:', error);
+    }
+  };
 
-    // Auto-save to preferences
-    updateNotificationSettings({ [setting]: newSettings[setting] });
+  const handleSettingChange = (key: keyof NotificationSettings, value: any) => {
+    const newSettings = { ...settings, [key]: value };
+    setSettings(newSettings);
+
+    // Auto-save individual setting
+    updateNotificationSetting(key, value);
+  };
+
+  const updateNotificationSetting = async (key: keyof NotificationSettings, value: any) => {
+    try {
+      // INSERTAPIHERE: Update individual notification setting
+      const response = await fetch('/api/notifications/settings', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ [key]: value }),
+      });
+
+      if (!response.ok) {
+        console.error('Failed to update notification setting');
+      }
+    } catch (error) {
+      console.error('Network error updating notification setting');
+    }
   };
 
   const handleSaveAll = async () => {
     setIsLoading(true);
     try {
-      await updateNotificationSettings(localSettings);
-      // Close modal after successful save
-      onHide();
+      // INSERTAPIHERE: Save all notification settings
+      const response = await fetch('/api/notifications/settings', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(settings),
+      });
+
+      if (response.ok) {
+        showSuccess('Notification settings saved successfully');
+        onHide();
+      } else {
+        showError('Failed to save notification settings');
+      }
     } catch (error) {
-      console.error('Error saving notification settings:', error);
+      showError('Network error. Please try again.');
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const testNotification = async (type: string) => {
+    try {
+      // INSERTAPIHERE: Send test notification
+      const response = await fetch('/api/notifications/test', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ type }),
+      });
+
+      if (response.ok) {
+        showSuccess('Test notification sent!');
+      } else {
+        showError('Failed to send test notification');
+      }
+    } catch (error) {
+      showError('Network error. Please try again.');
     }
   };
 
@@ -70,14 +174,14 @@ export default function NotificationSettingsModal({ show, onHide }: Notification
 
             <div className="mb-4">
               <h6 className="mb-3">Market Notifications</h6>
-              <div className="form-check form-switch mb-3">
-                <input
-                  className="form-check-input"
-                  type="checkbox"
-                  id="priceAlerts"
-                  checked={localSettings.priceAlerts}
-                  onChange={() => handleSettingChange('priceAlerts')}
-                />
+               <div className="form-check form-switch mb-3">
+                 <input
+                   className="form-check-input"
+                   type="checkbox"
+                   id="priceAlerts"
+                   checked={settings.priceAlerts}
+                   onChange={(e) => handleSettingChange('priceAlerts', e.target.checked)}
+                 />
                 <label className="form-check-label" htmlFor="priceAlerts">
                   <strong>Price Alerts</strong>
                   <br />
@@ -85,14 +189,14 @@ export default function NotificationSettingsModal({ show, onHide }: Notification
                 </label>
               </div>
 
-              <div className="form-check form-switch mb-3">
-                <input
-                  className="form-check-input"
-                  type="checkbox"
-                  id="analystInsights"
-                  checked={localSettings.analystInsights}
-                  onChange={() => handleSettingChange('analystInsights')}
-                />
+               <div className="form-check form-switch mb-3">
+                 <input
+                   className="form-check-input"
+                   type="checkbox"
+                   id="analystInsights"
+                   checked={settings.analystInsights}
+                   onChange={(e) => handleSettingChange('analystInsights', e.target.checked)}
+                 />
                 <label className="form-check-label" htmlFor="analystInsights">
                   <strong>Analyst Insights</strong>
                   <br />
@@ -104,13 +208,13 @@ export default function NotificationSettingsModal({ show, onHide }: Notification
             <div className="mb-4">
               <h6 className="mb-3">Delivery Methods</h6>
               <div className="form-check form-switch mb-3">
-                <input
-                  className="form-check-input"
-                  type="checkbox"
-                  id="pushEnabled"
-                  checked={localSettings.pushEnabled}
-                  onChange={() => handleSettingChange('pushEnabled')}
-                />
+                 <input
+                   className="form-check-input"
+                   type="checkbox"
+                   id="pushEnabled"
+                   checked={settings.pushEnabled}
+                   onChange={(e) => handleSettingChange('pushEnabled', e.target.checked)}
+                 />
                 <label className="form-check-label" htmlFor="pushEnabled">
                   <strong>Push Notifications</strong>
                   <br />
