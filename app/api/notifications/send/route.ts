@@ -82,9 +82,9 @@ export async function POST(request: NextRequest) {
     }
 
     // Group tokens by platform for batch sending
-    const webTokens = notificationTokens.filter(t => t.platform === 'web').map(t => t.token);
-    const iosTokens = notificationTokens.filter(t => t.platform === 'ios').map(t => t.token);
-    const androidTokens = notificationTokens.filter(t => t.platform === 'android').map(t => t.token);
+    const webTokens = notificationTokens.filter((t: { platform: string }) => t.platform === 'web').map((t: { token: string }) => t.token);
+    const iosTokens = notificationTokens.filter((t: { platform: string }) => t.platform === 'ios').map((t: { token: string }) => t.token);
+    const androidTokens = notificationTokens.filter((t: { platform: string }) => t.platform === 'android').map((t: { token: string }) => t.token);
 
     // Prepare Firebase message
     const message = {
@@ -163,7 +163,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Store notification history
-    const notifications = targetUserIds.map(userId => ({
+    const notifications = targetUserIds.map((userId: string) => ({
       userId,
       title,
       body,
@@ -179,8 +179,8 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({
       success: true,
       results,
-      totalSent: results.reduce((sum, r) => sum + ('successCount' in r ? r.successCount : 0), 0),
-      totalFailed: results.reduce((sum, r) => sum + ('failureCount' in r ? r.failureCount : 0), 0),
+      totalSent: results.reduce((sum: number, r: any) => sum + ('successCount' in r ? r.successCount : 0), 0),
+      totalFailed: results.reduce((sum: number, r: any) => sum + ('failureCount' in r ? r.failureCount : 0), 0),
     });
   } catch (error) {
     console.error('Error sending notifications:', error);
