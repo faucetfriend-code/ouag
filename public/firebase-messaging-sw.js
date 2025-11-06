@@ -2,45 +2,52 @@
 importScripts('https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js');
 importScripts('https://www.gstatic.com/firebasejs/9.22.0/firebase-messaging-compat.js');
 
-const firebaseConfig = {
-  apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
-  authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN,
-  projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID,
-  storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET,
-  messagingSenderId: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID,
-  appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID,
-};
+let messaging;
 
-firebase.initializeApp(firebaseConfig);
+// Fetch Firebase config from API endpoint and initialize
+fetch('/api/firebase-config')
+  .then(response => response.json())
+  .then(firebaseConfig => {
+    if (firebaseConfig.error) {
+      console.error('Firebase not configured:', firebaseConfig.message);
+      return;
+    }
 
-const messaging = firebase.messaging();
+    firebase.initializeApp(firebaseConfig);
+    messaging = firebase.messaging();
 
-// Handle background messages
-messaging.onBackgroundMessage((payload) => {
-  console.log('Received background message:', payload);
+    console.log('Firebase initialized in service worker');
 
-  const notificationTitle = payload.notification?.title || 'Unity Oracle Alert';
-  const notificationOptions = {
-    body: payload.notification?.body || 'New market update available',
-    icon: '/icon-192x192.png',
-    badge: '/icon-192x192.png',
-    tag: payload.data?.tag || 'unity-oracle-notification',
-    data: payload.data,
-    requireInteraction: true,
-    actions: [
-      {
-        action: 'view',
-        title: 'View Details'
-      },
-      {
-        action: 'dismiss',
-        title: 'Dismiss'
-      }
-    ]
-  };
+    // Handle background messages
+    messaging.onBackgroundMessage((payload) => {
+      console.log('Received background message:', payload);
 
-  self.registration.showNotification(notificationTitle, notificationOptions);
-});
+      const notificationTitle = payload.notification?.title || 'Unity Oracle Alert';
+      const notificationOptions = {
+        body: payload.notification?.body || 'New market update available',
+        icon: '/icon-192x192.png',
+        badge: '/icon-192x192.png',
+        tag: payload.data?.tag || 'unity-oracle-notification',
+        data: payload.data,
+        requireInteraction: true,
+        actions: [
+          {
+            action: 'view',
+            title: 'View Details'
+          },
+          {
+            action: 'dismiss',
+            title: 'Dismiss'
+          }
+        ]
+      };
+
+      self.registration.showNotification(notificationTitle, notificationOptions);
+    });
+  })
+  .catch(error => {
+    console.error('Failed to fetch Firebase config:', error);
+  });
 
 // Handle notification click
 self.addEventListener('notificationclick', (event) => {

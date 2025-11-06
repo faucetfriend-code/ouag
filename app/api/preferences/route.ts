@@ -28,7 +28,7 @@ export async function GET(_request: NextRequest) {
 
     if (preferences) {
       // Convert database format to frontend format
-      const frontendPrefs: UserPreferences = {
+      const frontendPrefs = {
         userId: preferences.userId,
         currency: preferences.currency,
         timezone: preferences.timezone,
@@ -52,7 +52,7 @@ export async function GET(_request: NextRequest) {
       return NextResponse.json(frontendPrefs, { status: 200 });
     } else {
       // Return default preferences if none found
-      const defaultPrefs: UserPreferences = {
+      const defaultPrefs = {
         userId: session.user.id,
         currency: 'USD',
         timezone: 'UTC',
@@ -93,7 +93,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const body: Partial<UserPreferences> = await request.json();
+    const body = await request.json();
 
     // Ensure userId matches authenticated user
     const preferencesData = {

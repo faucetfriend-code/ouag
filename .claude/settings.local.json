@@ -4,7 +4,9 @@
       "Bash(git -C \"C:\\Users\\z_shi\\Desktop\\N8NPROJECTS\\unity-oracle-aggregator\" log --oneline --all)",
       "WebSearch",
       "Bash(npm run lint:*)",
-      "Bash(npm run dev:local:*)"
+      "Bash(npm run dev:local:*)",
+      "Bash(npm run build:*)",
+      "Bash(npx prisma generate)"
     ],
     "deny": [],
     "ask": []

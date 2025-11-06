@@ -17,6 +17,14 @@ interface SecuritySettings {
   loginNotifications: boolean;
 }
 
+interface Session {
+  id: string;
+  device: string;
+  location: string;
+  lastActive: string;
+  current?: boolean;
+}
+
 export default function SecuritySettingsModal({ show, onHide }: SecuritySettingsModalProps) {
   const [currentPassword, setCurrentPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
@@ -29,7 +37,7 @@ export default function SecuritySettingsModal({ show, onHide }: SecuritySettings
   });
   const [isLoading, setIsLoading] = useState(false);
   const [biometricAvailable, setBiometricAvailable] = useState(false);
-  const [activeSessions, setActiveSessions] = useState([]);
+  const [activeSessions, setActiveSessions] = useState<Session[]>([]);
 
   // Load security settings when modal opens
   useEffect(() => {

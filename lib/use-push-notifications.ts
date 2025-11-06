@@ -22,28 +22,8 @@ export function usePushNotifications() {
       const notification = event.detail;
 
       // Show toast notification
-      toast(notification.title, {
-        description: notification.body,
+      toast(`${notification.title}: ${notification.body}`, {
         duration: notification.priority === 'high' ? 10000 : 5000,
-        action: {
-          label: 'View',
-          onClick: () => {
-            // Navigate based on notification type
-            switch (notification.type) {
-              case 'price_alert':
-                window.location.href = '/tools/oracle-alerts';
-                break;
-              case 'portfolio_update':
-                window.location.href = '/profile';
-                break;
-              case 'news':
-                window.location.href = '/news';
-                break;
-              default:
-                window.location.href = '/';
-            }
-          },
-        },
       });
     };
 

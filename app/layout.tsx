@@ -1,9 +1,7 @@
 import type { Metadata } from 'next'
 import 'bootstrap/dist/css/bootstrap.min.css'
 import './globals.css'
-import { AuthProvider } from '@/lib/auth-context'
-import { UserPreferencesProvider } from '@/lib/user-preferences-context'
-import { LoadingProvider } from '@/lib/loading-context'
+import { Providers } from '@/components/Providers'
 import ErrorBoundary from '@/components/ErrorBoundary'
 import GlobalLoadingSpinner from '@/components/GlobalLoadingSpinner'
 import ToastProvider from '@/components/ToastProvider'
@@ -25,18 +23,14 @@ export default function RootLayout({
     <html lang="en">
       <body>
         <ErrorBoundary>
-          <LoadingProvider>
-            <AuthProvider>
-              <UserPreferencesProvider>
-                <Navigation />
-                {children}
-                <Footer />
-                <GlobalLoadingSpinner />
-                <ToastProvider />
-                <OfflineIndicator />
-              </UserPreferencesProvider>
-            </AuthProvider>
-          </LoadingProvider>
+          <Providers>
+            <Navigation />
+            {children}
+            <Footer />
+            <GlobalLoadingSpinner />
+            <ToastProvider />
+            <OfflineIndicator />
+          </Providers>
         </ErrorBoundary>
       </body>
     </html>

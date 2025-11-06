@@ -12,6 +12,9 @@ import CurrencySettingsModal from '@/components/settings/CurrencySettingsModal';
 import PositionTracker from '@/components/PositionTracker';
 import PortfolioImportModal from '@/components/PortfolioImportModal';
 
+// Force dynamic rendering to avoid issues with NextAuth during static generation
+export const dynamic = 'force-dynamic';
+
 interface PortfolioHolding {
   id: string;
   token: string;
@@ -224,11 +227,11 @@ export default function ProfilePage() {
                  ) : (
                    <div className="bg-primary text-white rounded-circle d-inline-flex align-items-center justify-content-center"
                         style={{ width: '80px', height: '80px', fontSize: '2rem', fontWeight: 'bold' }}>
-                     {user.username.charAt(0).toUpperCase()}
+                     {(user.username || 'U').charAt(0).toUpperCase()}
                    </div>
                  )}
                </div>
-               <h5 className="card-title mb-1">{user.username}#{user.discriminator}</h5>
+               <h5 className="card-title mb-1">{user.username || 'Unknown'}#{user.discriminator}</h5>
                {user.email && <p className="text-secondary small mb-2">{user.email}</p>}
                <div className="mb-3">
                  <span className={`badge ${user.isServerMember ? 'bg-success' : 'bg-danger'}`}>

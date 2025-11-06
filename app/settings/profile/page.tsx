@@ -4,6 +4,9 @@ import Link from 'next/link';
 import { useState } from 'react';
 import { useAuth } from '@/lib/auth-context';
 
+// Force dynamic rendering to avoid issues with NextAuth during static generation
+export const dynamic = 'force-dynamic';
+
 export default function ProfileSettingsPage() {
   const { user } = useAuth();
   const [displayName, setDisplayName] = useState(user?.username || '');
@@ -107,7 +110,7 @@ export default function ProfileSettingsPage() {
                   ) : (
                     <div className="bg-primary text-white rounded-circle d-inline-flex align-items-center justify-content-center"
                          style={{ width: '120px', height: '120px', fontSize: '3rem', fontWeight: 'bold' }}>
-                      {user.username.charAt(0).toUpperCase()}
+                      {(user.username || 'U').charAt(0).toUpperCase()}
                     </div>
                   )}
                 </div>

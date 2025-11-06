@@ -69,7 +69,7 @@ export async function POST(request: NextRequest) {
       const mockData = {
         user: {
           id: session.user.id,
-          username: session.user.name,
+          username: session.user.username,
           email: session.user.email,
         },
         exportDate: new Date().toISOString(),

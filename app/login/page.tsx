@@ -4,6 +4,9 @@ import { useAuth } from '@/lib/auth-context';
 import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 
+// Force dynamic rendering to avoid issues with NextAuth during static generation
+export const dynamic = 'force-dynamic';
+
 export default function LoginPage() {
   const { login, user, loading } = useAuth();
   const router = useRouter();

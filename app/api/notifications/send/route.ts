@@ -61,7 +61,7 @@ export async function POST(request: NextRequest) {
           userId: true,
         },
       });
-      targetUserIds = usersWithNotifications.map(pref => pref.userId);
+      targetUserIds = usersWithNotifications.map((pref: { userId: string }) => pref.userId);
     }
 
     if (targetUserIds.length === 0) {
@@ -98,10 +98,10 @@ export async function POST(request: NextRequest) {
         ...data,
       },
       android: {
-        priority: priority === 'high' ? 'high' : 'normal',
+        priority: (priority === 'high' ? 'high' : 'normal') as 'high' | 'normal',
         notification: {
           channelId: 'unity-oracle-channel',
-          priority: priority === 'high' ? 'max' : priority === 'low' ? 'min' : 'default',
+          priority: (priority === 'high' ? 'max' : priority === 'low' ? 'min' : 'default') as 'low' | 'high' | 'max' | 'min' | 'default',
         },
       },
       apns: {
@@ -123,42 +123,42 @@ export async function POST(request: NextRequest) {
     // Send to web tokens
     if (webTokens.length > 0) {
       try {
-        const webResult = await getMessaging().sendMulticast({
+        const webResult = await getMessaging().sendEachForMulticast({
           ...message,
           tokens: webTokens,
         });
         results.push({ platform: 'web', ...webResult });
-      } catch (error) {
+      } catch (error: unknown) {
         console.error('Error sending web notifications:', error);
-        results.push({ platform: 'web', error: error.message });
+        results.push({ platform: 'web', error: error instanceof Error ? error.message : 'Unknown error' });
       }
     }
 
     // Send to iOS tokens
     if (iosTokens.length > 0) {
       try {
-        const iosResult = await getMessaging().sendMulticast({
+        const iosResult = await getMessaging().sendEachForMulticast({
           ...message,
           tokens: iosTokens,
         });
         results.push({ platform: 'ios', ...iosResult });
-      } catch (error) {
+      } catch (error: unknown) {
         console.error('Error sending iOS notifications:', error);
-        results.push({ platform: 'ios', error: error.message });
+        results.push({ platform: 'ios', error: error instanceof Error ? error.message : 'Unknown error' });
       }
     }
 
     // Send to Android tokens
     if (androidTokens.length > 0) {
       try {
-        const androidResult = await getMessaging().sendMulticast({
+        const androidResult = await getMessaging().sendEachForMulticast({
           ...message,
           tokens: androidTokens,
         });
         results.push({ platform: 'android', ...androidResult });
-      } catch (error) {
+      } catch (error: unknown) {
         console.error('Error sending Android notifications:', error);
-        results.push({ platform: 'android', error: error.message });
+        results.push({ platform: 'android', error: error instanceof Error ? error.message : 'Unknown error' });
       }
     }
 
@@ -179,8 +179,8 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({
       success: true,
       results,
-      totalSent: results.reduce((sum, r) => sum + (r.successCount || 0), 0),
-      totalFailed: results.reduce((sum, r) => sum + (r.failureCount || 0), 0),
+      totalSent: results.reduce((sum, r) => sum + ('successCount' in r ? r.successCount : 0), 0),
+      totalFailed: results.reduce((sum, r) => sum + ('failureCount' in r ? r.failureCount : 0), 0),
     });
   } catch (error) {
     console.error('Error sending notifications:', error);

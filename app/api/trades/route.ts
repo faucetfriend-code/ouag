@@ -241,7 +241,7 @@ export async function POST(request: NextRequest) {
     await updateMonthlyPnL(session.user.id, monthYear);
 
     // If this is a leveraged position, create an open position record
-    if (tradeData.leverage && tradeData.leverage > 1 && tradeData.margin) {
+    if (tradeData.leverage && tradeData.leverage > 1 && tradeData.margin && liquidationPrice !== null) {
       await prisma.openPosition.create({
         data: {
           userId: session.user.id,

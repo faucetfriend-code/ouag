@@ -46,7 +46,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         discriminator: (session.user as any).discriminator,
         avatar: (session.user as any).avatar,
         email: session.user.email,
-        name: session.user.name,
+        name: (session.user as any).name || (session.user as any).username,
         isServerMember: (session.user as any).isServerMember,
         subscription: (session.user as any).subscription,
       });
