@@ -38,12 +38,21 @@ export async function POST(request: NextRequest) {
     }
 
     // Get current prices for all tokens
-    const tokenSymbols = portfolio.holdings.map(h => h.token.toLowerCase());
+    const tokenSymbols = portfolio.holdings.map((h: { token: string }) => h.token.toLowerCase());
     const prices = await getTokenPrices(tokenSymbols);
 
     // Update portfolio with latest data
     let refreshed = 0;
-    const holdings = [];
+    const holdings: Array<{
+      id: string;
+      token: string;
+      amount: number;
+      avgPrice: number;
+      currentPrice: number;
+      value: number;
+      change24h: number;
+      lastUpdated: string;
+    }> = [];
 
     for (const holding of portfolio.holdings) {
       const tokenKey = holding.token.toLowerCase();
@@ -84,8 +93,8 @@ export async function POST(request: NextRequest) {
     }
 
     // Calculate portfolio totals
-    const totalValue = holdings.reduce((sum, h) => sum + h.value, 0);
-    const totalChange24h = holdings.reduce((sum, h) => sum + (h.value * h.change24h / 100), 0);
+    const totalValue = holdings.reduce((sum: number, h: { value: number }) => sum + h.value, 0);
+    const totalChange24h = holdings.reduce((sum: number, h: { value: number; change24h: number }) => sum + (h.value * h.change24h / 100), 0);
 
     // Update portfolio timestamp
     await prisma.portfolio.update({
@@ -134,8 +143,8 @@ async function getTokenPrices(tokenSymbols: string[]): Promise<Record<string, { 
     };
 
     const coinIds = tokenSymbols
-      .map(symbol => symbolToId[symbol] || symbol)
-      .filter(id => !tokenSymbols.includes(id)); // Remove unmapped symbols
+      .map((symbol: string) => symbolToId[symbol] || symbol)
+      .filter((id: string) => !tokenSymbols.includes(id)); // Remove unmapped symbols
 
     if (coinIds.length === 0) {
       return prices;
@@ -157,7 +166,7 @@ async function getTokenPrices(tokenSymbols: string[]): Promise<Record<string, { 
 
     // Map back to symbols
     for (const [coinId, priceData] of Object.entries(data) as [string, any][]) {
-      const symbol = Object.keys(symbolToId).find(key => symbolToId[key] === coinId) || coinId.toLowerCase();
+      const symbol = Object.keys(symbolToId).find((key: string) => symbolToId[key] === coinId) || coinId.toLowerCase();
 
       if (priceData.usd) {
         prices[symbol] = {
