@@ -14,9 +14,9 @@ import { getAnalystFollowerCount } from '@/lib/serverUserPreferences';
 import FavoriteAnalystButton from '@/components/FavoriteAnalystButton';
 
 interface AnalystProfilePageProps {
-  params: {
+  params: Promise<{
     username: string;
-  };
+  }>;
 }
 
 // Extract analyst-specific data
@@ -63,12 +63,11 @@ async function getAnalystData(username: string) {
 }
 
 export default async function AnalystProfilePage({ params }: AnalystProfilePageProps) {
-  const { username } = params;
+  const { username } = await params;
   const analystData = await getAnalystData(username);
   const followerCount = await getAnalystFollowerCount(username);
 
-  // Calculate current time once for the entire render (server component - not affected by re-renders)
-  // eslint-disable-next-line react-hooks/rules-of-hooks
+  // Calculate current time once for the entire render (server component)
   const now = Date.now();
 
   // Format time ago
