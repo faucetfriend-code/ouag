@@ -8,9 +8,10 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 # Development
 npm run dev              # Start dev server on 0.0.0.0 (for network access)
 npm run dev:local        # Start dev server on localhost only
-npm run build            # Build Next.js application
+npm run build            # Build Next.js application (includes TypeScript check)
+npm run export           # Build static export for Capacitor
 npm run start            # Start production server
-npm run lint             # Run ESLint (use this for quick validation)
+npm run lint             # Run ESLint (use for quick validation)
 
 # Database
 npm run db:push          # Push Prisma schema to PostgreSQL
@@ -19,7 +20,7 @@ npm run redis:init       # Seed Redis with initial analyst data
 npm run redis:clear      # Clear all Redis data
 
 # Android Build
-npm run android:build    # Build and sync to Android with Capacitor
+npm run android:build    # Build Next.js and sync to Android with Capacitor
 npm run android:open     # Open Android Studio
 npm run android:run      # Build and run on Android device
 ```
@@ -86,12 +87,19 @@ User clicks "Login with Discord"
 **Key Files:**
 - `lib/auth.ts` - NextAuth configuration (Discord provider, callbacks)
 - `lib/auth-context.tsx` - React context wrapping NextAuth session
+- `components/Providers.tsx` - Provider wrapper including SessionProvider
 - `app/api/auth/[...nextauth]/route.ts` - NextAuth API route
 
 **Usage:**
 ```typescript
 const { user, loading, login, logout, canAccessPremium } = useAuth();
 ```
+
+**CRITICAL:** NextAuth requires `SessionProvider` wrapper. All providers are consolidated in `components/Providers.tsx` which wraps:
+1. `SessionProvider` (NextAuth)
+2. `LoadingProvider`
+3. `AuthProvider` (custom)
+4. `UserPreferencesProvider`
 
 ### User Preferences System
 
@@ -223,12 +231,15 @@ const { posts } = await response.json();
 ### Authentication & Authorization
 - `lib/auth.ts` - NextAuth configuration (Discord OAuth, callbacks, JWT)
 - `lib/auth-context.tsx` - React context wrapping NextAuth
+- `components/Providers.tsx` - Consolidated provider wrapper (SessionProvider + all contexts)
 - `app/api/auth/[...nextauth]/route.ts` - NextAuth API handler
 
 ### Context Providers
+- `components/Providers.tsx` - **Main provider wrapper** (use this in layout)
 - `lib/user-preferences-context.tsx` - User preferences with PostgreSQL sync
 - `lib/data-source-context.tsx` - Data source toggle (analyst data only)
 - `lib/auth-context.tsx` - Authentication state management
+- `lib/loading-context.tsx` - Global loading state
 
 ### API Routes
 - `app/api/preferences/route.ts` - User preferences CRUD (Prisma)
@@ -338,7 +349,47 @@ const portfolio = await prisma.portfolio.findFirst({
 
 ## Common Gotchas
 
-### 1. NextAuth Session Type Extension
+### 1. NextAuth SessionProvider Required
+
+**CRITICAL:** Client components using `useAuth()` or `useSession()` require `SessionProvider` wrapper.
+
+```typescript
+// ❌ WRONG - Missing SessionProvider causes build/runtime errors
+export default function RootLayout({ children }) {
+  return (
+    <html>
+      <body>
+        <AuthProvider>  {/* useSession() inside will fail */}
+          {children}
+        </AuthProvider>
+      </body>
+    </html>
+  );
+}
+
+// ✅ CORRECT - Use Providers component
+import { Providers } from '@/components/Providers';
+
+export default function RootLayout({ children }) {
+  return (
+    <html>
+      <body>
+        <Providers>  {/* Includes SessionProvider */}
+          {children}
+        </Providers>
+      </body>
+    </html>
+  );
+}
+```
+
+**Pages with auth must use dynamic rendering:**
+```typescript
+// Add to any page using useAuth/useSession
+export const dynamic = 'force-dynamic';
+```
+
+### 2. NextAuth Session Type Extension
 
 NextAuth's default session type doesn't include our custom User fields. Extend it:
 
@@ -351,7 +402,34 @@ const user: User = {
 };
 ```
 
-### 2. Prisma Client Singleton
+### 3. TypeScript Implicit 'any' Errors
+
+When adding callback functions in `.map()`, `.filter()`, `.reduce()`, etc., you MUST add type annotations:
+
+```typescript
+// ❌ WRONG - Implicit 'any' type error
+const tokens = holdings.map(h => h.token);
+const total = values.reduce((sum, v) => sum + v, 0);
+
+// ✅ CORRECT - Add type annotations
+const tokens = holdings.map((h: { token: string }) => h.token);
+const total = values.reduce((sum: number, v: number) => sum + v, 0);
+```
+
+**Common patterns:**
+```typescript
+// Filter + map
+items.filter((item: { active: boolean }) => item.active)
+     .map((item: { id: string }) => item.id);
+
+// Reduce with object
+items.reduce((acc: Record<string, number>, item: { key: string; value: number }) => {
+  acc[item.key] = item.value;
+  return acc;
+}, {});
+```
+
+### 4. Prisma Client Singleton
 
 Always import from `lib/prisma.ts`, never instantiate directly:
 
@@ -364,11 +442,7 @@ import { PrismaClient } from '@prisma/client';
 const prisma = new PrismaClient();
 ```
 
-### 3. API Routes Need INSERTAPIHERE Markers
-
-The codebase uses `// INSERTAPIHERE:` comments to mark where API endpoints need implementation. Search for these when adding features.
-
-### 4. Settings Modals Use Toast Notifications
+### 5. Settings Modals Use Toast Notifications
 
 Use `lib/toast.ts` functions instead of `alert()`:
 
@@ -379,16 +453,17 @@ showSuccess('Settings saved!');
 showError('Failed to save settings');
 ```
 
-### 5. TypeScript `any` Types
+### 6. TypeScript `any` Types
 
 The codebase has many `@typescript-eslint/no-explicit-any` errors (see TDB.md). When adding new code, prefer proper typing over `any`.
 
-### 6. Build vs Lint
+### 7. Build vs Lint
 
-- Use `npm run lint` for quick validation (faster)
-- Use `npm run build` for full validation (catches more errors, but slower)
+- Use `npm run lint` for quick validation (faster, shows warnings + errors)
+- Use `npm run build` for full validation (catches TypeScript errors, but slower)
+- **Build failures are blocking** - fix these first before deploying
 
-### 7. Server-Only Imports
+### 8. Server-Only Imports
 
 Always check if you're in a Client Component before importing:
 - `lib/prisma.ts` → Server-only
@@ -396,9 +471,28 @@ Always check if you're in a Client Component before importing:
 - `lib/analystDataSource.ts` → Works both sides (has internal check)
 - `lib/redis.ts` → Server-only
 
-### 8. Mock vs Real Data Toggle
+### 9. Mock vs Real Data Toggle
 
 The data source toggle **only affects analyst insights**. Tools, News, and Airdrops always use their respective data sources.
+
+### 10. Firebase Environment Variables
+
+Firebase Admin SDK requires properly formatted environment variables:
+
+```bash
+# Individual fields (recommended for local development)
+FIREBASE_PROJECT_ID=your-project-id
+FIREBASE_CLIENT_EMAIL=firebase-adminsdk-xxxxx@your-project.iam.gserviceaccount.com
+FIREBASE_PRIVATE_KEY="-----BEGIN PRIVATE KEY-----\n...\n-----END PRIVATE KEY-----\n"
+
+# Note: FIREBASE_PRIVATE_KEY must include escaped newlines (\n)
+# Copy from Firebase Console → Project Settings → Service Accounts → Generate Key
+```
+
+If you see "Failed to parse private key" errors, check that:
+1. Private key includes proper `\n` escape sequences
+2. Key is wrapped in quotes in `.env.local`
+3. No extra whitespace or formatting issues
 
 ## Development Workflow
 
