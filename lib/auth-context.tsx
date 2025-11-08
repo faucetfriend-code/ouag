@@ -36,9 +36,29 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const loading = status === 'loading';
 
-  // Convert NextAuth session to our User interface
+  // Check for test user mode (enabled via environment variable or localStorage)
   useEffect(() => {
-    if (session?.user) {
+    const enableTestUser = process.env.NEXT_PUBLIC_ENABLE_TEST_USER === 'true' ||
+                          (typeof window !== 'undefined' && localStorage.getItem('enable_test_user') === 'true');
+
+    if (enableTestUser && !session) {
+      // Set a test user for development/demo purposes
+      setUser({
+        id: 'test-user-123',
+        discordId: 'test-discord-id',
+        username: 'TestUser',
+        discriminator: '0001',
+        avatar: undefined,
+        email: 'test@example.com',
+        name: 'Test User',
+        isServerMember: true,
+        subscription: {
+          active: true,
+          endDate: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000), // 1 year
+          plan: 'Premium (Test)'
+        }
+      });
+    } else if (session?.user) {
       setUser({
         id: session.user.id,
         discordId: (session.user as any).discordId,
