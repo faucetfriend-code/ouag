@@ -21,27 +21,27 @@ async function updateMonthlyPnL(userId: string, monthYear: string) {
   });
 
   const totalTrades = trades.length;
-  const winningTrades = trades.filter(t => (t.realizedPnL || 0) > 0).length;
-  const losingTrades = trades.filter(t => (t.realizedPnL || 0) < 0).length;
+  const winningTrades = trades.filter((t: { realizedPnL: number | null }) => (t.realizedPnL || 0) > 0).length;
+  const losingTrades = trades.filter((t: { realizedPnL: number | null }) => (t.realizedPnL || 0) < 0).length;
   const winRate = totalTrades > 0 ? (winningTrades / totalTrades) * 100 : 0;
 
-  const totalPnL = trades.reduce((sum, t) => sum + (t.realizedPnL || 0), 0);
-  const totalVolume = trades.reduce((sum, t) => sum + t.totalValue, 0);
-  const totalFees = trades.reduce((sum, t) => sum + t.fee, 0);
+  const totalPnL = trades.reduce((sum: number, t: { realizedPnL: number | null }) => sum + (t.realizedPnL || 0), 0);
+  const totalVolume = trades.reduce((sum: number, t: { totalValue: number }) => sum + t.totalValue, 0);
+  const totalFees = trades.reduce((sum: number, t: { fee: number }) => sum + t.fee, 0);
 
-  const winningPnLs = trades.filter(t => (t.realizedPnL || 0) > 0).map(t => t.realizedPnL || 0);
-  const losingPnLs = trades.filter(t => (t.realizedPnL || 0) < 0).map(t => t.realizedPnL || 0);
+  const winningPnLs = trades.filter((t: { realizedPnL: number | null }) => (t.realizedPnL || 0) > 0).map((t: { realizedPnL: number | null }) => t.realizedPnL || 0);
+  const losingPnLs = trades.filter((t: { realizedPnL: number | null }) => (t.realizedPnL || 0) < 0).map((t: { realizedPnL: number | null }) => t.realizedPnL || 0);
 
-  const avgWin = winningPnLs.length > 0 ? winningPnLs.reduce((a, b) => a + b, 0) / winningPnLs.length : null;
-  const avgLoss = losingPnLs.length > 0 ? losingPnLs.reduce((a, b) => a + b, 0) / losingPnLs.length : null;
+  const avgWin = winningPnLs.length > 0 ? winningPnLs.reduce((a: number, b: number) => a + b, 0) / winningPnLs.length : null;
+  const avgLoss = losingPnLs.length > 0 ? losingPnLs.reduce((a: number, b: number) => a + b, 0) / losingPnLs.length : null;
   const largestWin = winningPnLs.length > 0 ? Math.max(...winningPnLs) : 0;
   const largestLoss = losingPnLs.length > 0 ? Math.min(...losingPnLs) : 0;
 
   // Calculate Sharpe ratio (simplified version)
-  const returns = trades.map(t => (t.realizedPnL || 0) / t.totalValue);
-  const avgReturn = returns.length > 0 ? returns.reduce((a, b) => a + b, 0) / returns.length : 0;
+  const returns = trades.map((t: { realizedPnL: number | null; totalValue: number }) => (t.realizedPnL || 0) / t.totalValue);
+  const avgReturn = returns.length > 0 ? returns.reduce((a: number, b: number) => a + b, 0) / returns.length : 0;
   const variance = returns.length > 0 ?
-    returns.reduce((sum, ret) => sum + Math.pow(ret - avgReturn, 2), 0) / returns.length : 0;
+    returns.reduce((sum: number, ret: number) => sum + Math.pow(ret - avgReturn, 2), 0) / returns.length : 0;
   const stdDev = Math.sqrt(variance);
   const sharpeRatio = stdDev > 0 ? avgReturn / stdDev : null;
 
@@ -52,7 +52,7 @@ async function updateMonthlyPnL(userId: string, monthYear: string) {
 
   for (const trade of trades) {
     const cumulativePnL = trades.slice(0, trades.indexOf(trade) + 1)
-      .reduce((sum, t) => sum + (t.realizedPnL || 0), 0);
+      .reduce((sum: number, t: { realizedPnL: number | null }) => sum + (t.realizedPnL || 0), 0);
 
     if (cumulativePnL > peak) {
       peak = cumulativePnL;
@@ -155,12 +155,12 @@ export async function GET(request: NextRequest) {
 
     // Calculate performance metrics
     const totalTrades = trades.length;
-    const winningTrades = trades.filter(t => (t.realizedPnL || 0) > 0).length;
-    const losingTrades = trades.filter(t => (t.realizedPnL || 0) < 0).length;
+    const winningTrades = trades.filter((t: { realizedPnL: number | null }) => (t.realizedPnL || 0) > 0).length;
+    const losingTrades = trades.filter((t: { realizedPnL: number | null }) => (t.realizedPnL || 0) < 0).length;
     const winRate = totalTrades > 0 ? (winningTrades / totalTrades) * 100 : 0;
 
-    const totalPnL = trades.reduce((sum, t) => sum + (t.realizedPnL || 0), 0);
-    const totalVolume = trades.reduce((sum, t) => sum + t.totalValue, 0);
+    const totalPnL = trades.reduce((sum: number, t: { realizedPnL: number | null }) => sum + (t.realizedPnL || 0), 0);
+    const totalVolume = trades.reduce((sum: number, t: { totalValue: number }) => sum + t.totalValue, 0);
 
     return NextResponse.json({
       trades,

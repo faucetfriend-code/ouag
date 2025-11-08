@@ -71,14 +71,14 @@ export async function GET(request: NextRequest) {
     }
 
     // Get current prices for all tokens
-    const tokenSymbols = portfolio.holdings.map(h => h.token.toLowerCase());
+    const tokenSymbols = portfolio.holdings.map((h: { token: string }) => h.token.toLowerCase());
     const prices = await getTokenPrices(tokenSymbols);
 
     // Calculate portfolio metrics
     let totalValue = 0;
     let totalChange24h = 0;
 
-    const holdings: PortfolioHolding[] = portfolio.holdings.map(holding => {
+    const holdings: PortfolioHolding[] = portfolio.holdings.map((holding: { id: string; token: string; amount: number; avgPrice: number; createdAt: Date; updatedAt: Date }) => {
       const tokenKey = holding.token.toLowerCase();
       const currentPrice = prices[tokenKey]?.price || 0;
       const value = holding.amount * currentPrice;
