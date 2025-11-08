@@ -245,7 +245,15 @@ export default function Navigation() {
             transition: 'opacity 0.3s ease-in-out'
           }}
           onClick={() => setIsMobileMenuOpen(false)}
-          aria-hidden="true"
+          role="button"
+          aria-label="Close navigation menu"
+          tabIndex={0}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter' || e.key === ' ') {
+              e.preventDefault();
+              setIsMobileMenuOpen(false);
+            }
+          }}
         />
       )}
 

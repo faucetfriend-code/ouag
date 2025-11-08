@@ -203,7 +203,7 @@ export default function SecuritySettingsPage() {
                     Add an extra layer of security to your account by enabling two-factor authentication.
                   </p>
                   <div className="mb-3">
-                    <span className={`badge ${twoFactorEnabled ? 'bg-success' : 'bg-warning'}`}>
+                    <span className={`badge ${twoFactorEnabled ? 'bg-success' : 'bg-warning text-dark'}`}>
                       <i className={`bi ${twoFactorEnabled ? 'bi-check-circle' : 'bi-exclamation-triangle'} me-1`}></i>
                       {twoFactorEnabled ? 'Enabled' : 'Disabled'}
                     </span>

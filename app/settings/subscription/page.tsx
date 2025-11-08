@@ -349,7 +349,7 @@ export default function SubscriptionPage() {
                           <td>{invoice.plan}</td>
                           <td>{formatCurrency(invoice.amount)}</td>
                           <td>
-                            <span className={`badge ${invoice.status === 'paid' ? 'bg-success' : 'bg-warning'}`}>
+                            <span className={`badge ${invoice.status === 'paid' ? 'bg-success' : 'bg-warning text-dark'}`}>
                               {invoice.status}
                             </span>
                           </td>

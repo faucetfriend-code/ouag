@@ -26,7 +26,9 @@ export default function RootLayout({
         <ErrorBoundary>
           <Providers>
             <Navigation />
-            {children}
+            <main id="main-content">
+              {children}
+            </main>
             <Footer />
             <GlobalLoadingSpinner />
             <ToastProvider />
