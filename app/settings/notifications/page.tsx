@@ -17,33 +17,18 @@ export default function NotificationSettingsPage() {
   });
   const [isLoading, setIsLoading] = useState(false);
 
-  if (!user) {
-    return (
-      <div className="container mt-4">
-        <div className="text-center">
-          <h1 className="mb-3">Notification Settings</h1>
-          <p className="text-secondary mb-4">Please log in to access your notification settings.</p>
-          <Link href="/login" className="btn btn-primary">
-            <i className="bi bi-discord me-2"></i>
-            Login with Discord
-          </Link>
-        </div>
-      </div>
-    );
-  }
-
   // Sync local state with preferences when component mounts or preferences change
   useEffect(() => {
-    if (preferences?.notificationSettings) {
-      setLocalSettings({
-        priceAlerts: preferences.notificationSettings.priceAlerts || false,
-        analystInsights: preferences.notificationSettings.analystInsights || false,
-        pushEnabled: preferences.notificationSettings.pushEnabled || false,
-        emailEnabled: preferences.notificationSettings.emailEnabled || false,
-        smsEnabled: preferences.notificationSettings.smsEnabled || false,
-      });
-    }
-  }, [preferences]);
+    if (!user || !preferences?.notificationSettings) return; // Skip if no user or preferences
+
+    setLocalSettings({
+      priceAlerts: preferences.notificationSettings.priceAlerts || false,
+      analystInsights: preferences.notificationSettings.analystInsights || false,
+      pushEnabled: preferences.notificationSettings.pushEnabled || false,
+      emailEnabled: preferences.notificationSettings.emailEnabled || false,
+      smsEnabled: preferences.notificationSettings.smsEnabled || false,
+    });
+  }, [user, preferences]);
 
   const handleSettingChange = (setting: keyof typeof localSettings) => {
     const newSettings = {
@@ -83,6 +68,22 @@ export default function NotificationSettingsPage() {
       setIsLoading(false);
     }
   };
+
+  // Early return after all hooks
+  if (!user) {
+    return (
+      <div className="container mt-4">
+        <div className="text-center">
+          <h1 className="mb-3">Notification Settings</h1>
+          <p className="text-secondary mb-4">Please log in to access your notification settings.</p>
+          <Link href="/login" className="btn btn-primary">
+            <i className="bi bi-discord me-2"></i>
+            Login with Discord
+          </Link>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="container mt-4">

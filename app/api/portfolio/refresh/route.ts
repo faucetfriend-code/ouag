@@ -7,6 +7,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
+import { SYMBOL_TO_COINGECKO_ID } from '@/lib/coingecko-mappings';
 
 // CoinGecko API configuration
 const COINGECKO_API_BASE = 'https://api.coingecko.com/api/v3';
@@ -123,28 +124,16 @@ async function getTokenPrices(tokenSymbols: string[]): Promise<Record<string, { 
   const prices: Record<string, { price: number; change24h: number }> = {};
 
   try {
-    // Map common symbols to CoinGecko IDs (simplified mapping)
-    const symbolToId: Record<string, string> = {
-      'btc': 'bitcoin',
-      'eth': 'ethereum',
-      'sol': 'solana',
-      'ada': 'cardano',
-      'matic': 'polygon',
-      'dot': 'polkadot',
-      'link': 'chainlink',
-      'uni': 'uniswap',
-      'aave': 'aave',
-      'bnb': 'binancecoin',
-      'xrp': 'ripple',
-      'luna': 'terra-luna',
-      'doge': 'dogecoin',
-      'shib': 'shiba-inu',
-      'avax': 'avalanche-2'
-    };
-
+    // Map symbols to CoinGecko IDs
     const coinIds = tokenSymbols
-      .map((symbol: string) => symbolToId[symbol] || symbol)
-      .filter((id: string) => !tokenSymbols.includes(id)); // Remove unmapped symbols
+      .map((symbol: string) => SYMBOL_TO_COINGECKO_ID[symbol] || symbol)
+      .filter((id: string) => !tokenSymbols.includes(id)); // Keep only successfully mapped IDs
+
+    // Log warning for unmapped symbols
+    const unmappedSymbols = tokenSymbols.filter((symbol: string) => !SYMBOL_TO_COINGECKO_ID[symbol]);
+    if (unmappedSymbols.length > 0) {
+      console.warn('Unmapped token symbols (prices unavailable):', unmappedSymbols.join(', '));
+    }
 
     if (coinIds.length === 0) {
       return prices;
@@ -166,7 +155,7 @@ async function getTokenPrices(tokenSymbols: string[]): Promise<Record<string, { 
 
     // Map back to symbols
     for (const [coinId, priceData] of Object.entries(data) as [string, any][]) {
-      const symbol = Object.keys(symbolToId).find((key: string) => symbolToId[key] === coinId) || coinId.toLowerCase();
+      const symbol = Object.keys(SYMBOL_TO_COINGECKO_ID).find((key: string) => SYMBOL_TO_COINGECKO_ID[key] === coinId) || coinId.toLowerCase();
 
       if (priceData.usd) {
         prices[symbol] = {

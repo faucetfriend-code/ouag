@@ -3,19 +3,17 @@ import { pushNotificationService, PushNotificationData } from './push-notificati
 import { toast } from 'react-hot-toast';
 
 export function usePushNotifications() {
-  const [isSupported, setIsSupported] = useState(false);
+  // Use lazy initialization to avoid setState in useEffect
+  const [isSupported] = useState(() => pushNotificationService.isSupported());
   const [isInitialized, setIsInitialized] = useState(false);
-  const [permission, setPermission] = useState<NotificationPermission>('default');
+  const [permission, setPermission] = useState<NotificationPermission>(() =>
+    typeof window !== 'undefined' && 'Notification' in window
+      ? Notification.permission
+      : 'default'
+  );
   const [currentToken, setCurrentToken] = useState<string | null>(null);
 
   useEffect(() => {
-    // Check if push notifications are supported
-    setIsSupported(pushNotificationService.isSupported());
-
-    // Check current permission status
-    if ('Notification' in window) {
-      setPermission(Notification.permission);
-    }
 
     // Listen for push notification events
     const handlePushNotification = (event: CustomEvent<PushNotificationData>) => {
