@@ -10,6 +10,9 @@ import { redirect } from 'next/navigation';
 import { getTradingPostsByToken, getAllTokens, getAnalystStats } from '../../lib/analystDataSource';
 import { organizeDataByToken } from '../../utils/dataOrganization';
 
+// Force dynamic rendering since we're fetching from Redis
+export const dynamic = 'force-dynamic';
+
 // Mock price data for demonstration
 const mockPriceData: Record<string, { price: number; change1h: number; change24h: number }> = {
   BTC: { price: 58750, change1h: 0.85, change24h: 2.34 },
