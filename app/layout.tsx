@@ -6,6 +6,7 @@ import ErrorBoundary from '@/components/ErrorBoundary'
 import GlobalLoadingSpinner from '@/components/GlobalLoadingSpinner'
 import ToastProvider from '@/components/ToastProvider'
 import OfflineIndicator from '@/components/OfflineIndicator'
+import DevTools from '@/components/DevTools'
 import Navigation from '@/components/Navigation'
 import Footer from '@/components/Footer'
 
@@ -25,11 +26,14 @@ export default function RootLayout({
         <ErrorBoundary>
           <Providers>
             <Navigation />
-            {children}
+            <main id="main-content">
+              {children}
+            </main>
             <Footer />
             <GlobalLoadingSpinner />
             <ToastProvider />
             <OfflineIndicator />
+            <DevTools />
           </Providers>
         </ErrorBoundary>
       </body>

@@ -145,7 +145,7 @@ export default function NotificationCenter({ isOpen, onClose }: NotificationCent
             <Bell className="h-5 w-5" />
             <h2 className="text-lg font-semibold">Notifications</h2>
             {unreadCount > 0 && (
-              <span className="bg-red-500 text-white text-xs px-2 py-1 rounded-full">
+              <span className="bg-red-700 text-white text-xs px-2 py-1 rounded-full">
                 {unreadCount}
               </span>
             )}

@@ -355,7 +355,7 @@ export default function BillingPage() {
                           <td>{invoice.paymentMethod}</td>
                           <td className="fw-bold">{formatCurrency(invoice.amount)}</td>
                           <td>
-                            <span className={`badge ${invoice.status === 'paid' ? 'bg-success' : invoice.status === 'pending' ? 'bg-warning' : 'bg-danger'}`}>
+                            <span className={`badge ${invoice.status === 'paid' ? 'bg-success' : invoice.status === 'pending' ? 'bg-warning text-dark' : 'bg-danger'}`}>
                               {invoice.status}
                             </span>
                           </td>

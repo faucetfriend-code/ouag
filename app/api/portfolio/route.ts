@@ -8,6 +8,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
+import { SYMBOL_TO_COINGECKO_ID } from '@/lib/coingecko-mappings';
 
 // CoinGecko API configuration
 const COINGECKO_API_BASE = 'https://api.coingecko.com/api/v3';
@@ -71,14 +72,14 @@ export async function GET(request: NextRequest) {
     }
 
     // Get current prices for all tokens
-    const tokenSymbols = portfolio.holdings.map(h => h.token.toLowerCase());
+    const tokenSymbols = portfolio.holdings.map((h: { token: string }) => h.token.toLowerCase());
     const prices = await getTokenPrices(tokenSymbols);
 
     // Calculate portfolio metrics
     let totalValue = 0;
     let totalChange24h = 0;
 
-    const holdings: PortfolioHolding[] = portfolio.holdings.map(holding => {
+    const holdings: PortfolioHolding[] = portfolio.holdings.map((holding: { id: string; token: string; amount: number; avgPrice: number; createdAt: Date; updatedAt: Date }) => {
       const tokenKey = holding.token.toLowerCase();
       const currentPrice = prices[tokenKey]?.price || 0;
       const value = holding.amount * currentPrice;
@@ -204,149 +205,16 @@ async function getTokenPrices(tokenSymbols: string[]): Promise<Record<string, { 
   }
 
   try {
-    // Map common symbols to CoinGecko IDs
-    const symbolToId: Record<string, string> = {
-      'btc': 'bitcoin',
-      'eth': 'ethereum',
-      'sol': 'solana',
-      'ada': 'cardano',
-      'matic': 'polygon',
-      'dot': 'polkadot',
-      'link': 'chainlink',
-      'uni': 'uniswap',
-      'aave': 'aave',
-      'bnb': 'binancecoin',
-      'xrp': 'ripple',
-      'luna': 'terra-luna',
-      'doge': 'dogecoin',
-      'shib': 'shiba-inu',
-      'avax': 'avalanche-2',
-      'atom': 'cosmos',
-      'algo': 'algorand',
-      'vet': 'vechain',
-      'icp': 'internet-computer',
-      'fil': 'filecoin',
-      'trx': 'tron',
-      'etc': 'ethereum-classic',
-      'theta': 'theta-token',
-      'ftt': 'ftx-token',
-      'hbar': 'hedera-hashgraph',
-      'near': 'near',
-      'flow': 'flow',
-      'mana': 'decentraland',
-      'sand': 'the-sandbox',
-      'axs': 'axie-infinity',
-      'chz': 'chiliz',
-      'enj': 'enjincoin',
-      'bat': 'basic-attention-token',
-      'rep': 'augur',
-      'gnt': 'golem',
-      'storj': 'storj',
-      'ant': 'aragon',
-      'lrc': 'loopring',
-      'knc': 'kyber-network-crystal',
-      'cvc': 'civic',
-      'fun': 'funfair',
-      'req': 'request-network',
-      'salt': 'salt',
-      'sub': 'substratum',
-      'golos': 'golos',
-      'waves': 'waves',
-      'str': 'stellar',
-      'neo': 'neo',
-      'gas': 'gas',
-      'qtum': 'qtum',
-      'btm': 'bytom',
-      'hsr': 'hshare',
-      'btcp': 'bitcoin-private',
-      'btcz': 'bitcoinz',
-      'btx': 'bitcore',
-      'btp': 'bitcoin-platinum',
-      'btt': 'bittorrent',
-      'ctxc': 'cortex',
-      'dadi': 'dadi',
-      'dat': 'datum',
-      'dbc': 'deepbrain-chain',
-      'dgd': 'digixdao',
-      'dgtx': 'digitex-futures-exchange',
-      'drgn': 'dragonchain',
-      'edg': 'edgeless',
-      'edo': 'eidoo',
-      'elf': 'aelf',
-      'eng': 'enigma',
-      'evx': 'everex',
-      'fuel': 'etherparty',
-      'game': 'gamecredits',
-      'gbyte': 'byteball',
-      'gno': 'gnosis',
-      'gup': 'guppy',
-      'gxs': 'gxchain',
-      'huc': 'huntercoin',
-      'icn': 'iconomi',
-      'ins': 'insolar',
-      'iop': 'internet-of-people',
-      'kmd': 'komodo',
-      'lsk': 'lisk',
-      'maid': 'maidsafecoin',
-      'mco': 'monaco',
-      'mda': 'moeda-loyalty-points',
-      'mgo': 'mobilego',
-      'msp': 'mothership',
-      'mth': 'monetha',
-      'mtl': 'metal',
-      'mtn': 'medicalchain',
-      'nas': 'nebulas',
-      'nav': 'nav-coin',
-      'nuls': 'nuls',
-      'oax': 'oax',
-      'part': 'particl',
-      'pay': 'tenx',
-      'pivx': 'pivx',
-      'plr': 'pillar',
-      'poe': 'poet',
-      'poly': 'polymath',
-      'powr': 'power-ledger',
-      'ppt': 'populous',
-      'prl': 'oyster',
-      'pura': 'pura',
-      'qash': 'qash',
-      'qlc': 'qlink',
-      'qsp': 'quantstamp',
-      'r': 'revain',
-      'rdn': 'raiden-network-token',
-      'ren': 'republic-protocol',
-      'rhoc': 'rchain',
-      'rlc': 'iexec-rlc',
-      'rpx': 'rpx',
-      'san': 'santiment',
-      'sngls': 'singulardtv',
-      'snm': 'sonm',
-      'srn': 'sirin-labs-token',
-      'stx': 'blockstack',
-      'taas': 'taas',
-      'tkn': 'tokencard',
-      'tnt': 'tierion',
-      'trig': 'triggers',
-      'ubq': 'ubiq',
-      'veri': 'veritaseum',
-      'vib': 'viberate',
-      'vibe': 'vibe',
-      'wings': 'wings',
-      'wpr': 'wepower',
-      'wtc': 'waltonchain',
-      'xas': 'asch',
-      'xby': 'xtrabytes',
-      'xcp': 'counterparty',
-      'xdn': 'digitalnote',
-      'xpm': 'primecoin',
-      'xuc': 'exchange-union',
-      'yoyow': 'yoyow',
-      'zen': 'zencash'
-    };
-
+    // Map symbols to CoinGecko IDs
     const coinIds = uncachedSymbols
-      .map(symbol => symbolToId[symbol] || symbol)
-      .filter(id => !uncachedSymbols.includes(id)); // Remove unmapped symbols
+      .map(symbol => SYMBOL_TO_COINGECKO_ID[symbol] || symbol)
+      .filter(id => !uncachedSymbols.includes(id)); // Keep only successfully mapped IDs
+
+    // Log warning for unmapped symbols
+    const unmappedSymbols = uncachedSymbols.filter(symbol => !SYMBOL_TO_COINGECKO_ID[symbol]);
+    if (unmappedSymbols.length > 0) {
+      console.warn('Unmapped token symbols (prices unavailable):', unmappedSymbols.join(', '));
+    }
 
     if (coinIds.length === 0) {
       return prices;
@@ -368,7 +236,7 @@ async function getTokenPrices(tokenSymbols: string[]): Promise<Record<string, { 
 
     // Map back to symbols and cache
     for (const [coinId, priceData] of Object.entries(data) as [string, any][]) {
-      const symbol = Object.keys(symbolToId).find(key => symbolToId[key] === coinId) || coinId;
+      const symbol = Object.keys(SYMBOL_TO_COINGECKO_ID).find(key => SYMBOL_TO_COINGECKO_ID[key] === coinId) || coinId;
 
       if (priceData.usd) {
         prices[symbol] = {

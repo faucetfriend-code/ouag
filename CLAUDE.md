@@ -501,12 +501,23 @@ If you see "Failed to parse private key" errors, check that:
    # Install dependencies
    npm install
 
-   # Setup PostgreSQL database
+   # Configure environment (see ENVIRONMENT_SETUP.md)
+   # Edit .env.local with your database URLs and API keys
+
+   # Verify environment configuration
+   npm run verify-env
+
+   # Generate Prisma client (REQUIRED before first run)
+   npx prisma generate
+
+   # Setup PostgreSQL database schema
    npm run db:push
 
    # (Optional) Seed Redis with analyst data
    npm run redis:init
    ```
+
+   **Important:** If `npx prisma generate` fails, see `KNOWN_ISSUES.md` for troubleshooting.
 
 2. **Running Locally:**
    ```bash
@@ -544,9 +555,12 @@ If you see "Failed to parse private key" errors, check that:
 
 ## Important Context Files
 
+- `ENVIRONMENT_SETUP.md` - **Environment configuration guide (START HERE)**
+- `KNOWN_ISSUES.md` - Known issues and troubleshooting
 - `my docs/DATABASE_CONNECTION.md` - Complete Redis schema and query patterns
 - `my docs/WORKFLOW_DOCUMENTATION.md` - n8n workflow architecture
 - `prisma/schema.prisma` - PostgreSQL database schema
+- `lib/coingecko-mappings.ts` - Shared CoinGecko token mappings
 - `TDB.md` - Known issues, TODOs, and code quality notes
 - `package.json` - All available scripts
 - This file (`CLAUDE.md`) - Architecture overview

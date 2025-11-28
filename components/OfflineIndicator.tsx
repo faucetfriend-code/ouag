@@ -65,7 +65,7 @@ export default function OfflineIndicator() {
       <div
         className="position-fixed bottom-0 start-50 translate-middle-x mb-3 px-4 py-2 rounded shadow-lg"
         style={{
-          backgroundColor: '#ef4444',
+          backgroundColor: '#b91c1c',
           color: '#fff',
           zIndex: 9999,
           animation: 'slideUp 0.3s ease-out',

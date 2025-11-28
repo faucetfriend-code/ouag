@@ -1,24 +1,37 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getServerSession } from 'next-auth';
-import { authOptions } from '@/lib/auth';
+import { auth } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
 import { getMessaging } from 'firebase-admin/messaging';
-import { initializeApp, cert } from 'firebase-admin/app';
+import { initializeApp, cert, getApps } from 'firebase-admin/app';
 
-// Initialize Firebase Admin (only once)
-let firebaseAdminInitialized = false;
-if (!firebaseAdminInitialized) {
+// Lazy initialize Firebase Admin only when needed and configured
+function getFirebaseAdmin() {
+  // Check if already initialized
+  if (getApps().length > 0) {
+    return getApps()[0];
+  }
+
+  // Check if Firebase is configured
+  const projectId = process.env.FIREBASE_PROJECT_ID;
+  const clientEmail = process.env.FIREBASE_CLIENT_EMAIL;
+  const privateKey = process.env.FIREBASE_PRIVATE_KEY;
+
+  if (!projectId || !clientEmail || !privateKey) {
+    // Firebase is not configured - this is optional, so return null
+    return null;
+  }
+
   try {
-    initializeApp({
+    return initializeApp({
       credential: cert({
-        projectId: process.env.FIREBASE_PROJECT_ID,
-        clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
-        privateKey: process.env.FIREBASE_PRIVATE_KEY?.replace(/\\n/g, '\n'),
+        projectId,
+        clientEmail,
+        privateKey: privateKey.replace(/\\n/g, '\n'),
       }),
     });
-    firebaseAdminInitialized = true;
   } catch (error) {
     console.error('Firebase Admin initialization failed:', error);
+    return null;
   }
 }
 
@@ -33,7 +46,7 @@ interface SendNotificationRequest {
 
 export async function POST(request: NextRequest) {
   try {
-    const session = await getServerSession(authOptions);
+    const session = await auth();
     if (!session?.user?.id) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
@@ -120,45 +133,52 @@ export async function POST(request: NextRequest) {
 
     const results = [];
 
-    // Send to web tokens
-    if (webTokens.length > 0) {
-      try {
-        const webResult = await getMessaging().sendEachForMulticast({
-          ...message,
-          tokens: webTokens,
-        });
-        results.push({ platform: 'web', ...webResult });
-      } catch (error: unknown) {
-        console.error('Error sending web notifications:', error);
-        results.push({ platform: 'web', error: error instanceof Error ? error.message : 'Unknown error' });
+    // Check if Firebase is configured
+    const firebaseApp = getFirebaseAdmin();
+    if (!firebaseApp) {
+      // Firebase not configured - skip push notification sending
+      console.warn('Firebase Admin not configured. Skipping push notifications. Configure FIREBASE_PROJECT_ID, FIREBASE_CLIENT_EMAIL, and FIREBASE_PRIVATE_KEY to enable push notifications.');
+    } else {
+      // Send to web tokens
+      if (webTokens.length > 0) {
+        try {
+          const webResult = await getMessaging().sendEachForMulticast({
+            ...message,
+            tokens: webTokens,
+          });
+          results.push({ platform: 'web', ...webResult });
+        } catch (error: unknown) {
+          console.error('Error sending web notifications:', error);
+          results.push({ platform: 'web', error: error instanceof Error ? error.message : 'Unknown error' });
+        }
       }
-    }
 
-    // Send to iOS tokens
-    if (iosTokens.length > 0) {
-      try {
-        const iosResult = await getMessaging().sendEachForMulticast({
-          ...message,
-          tokens: iosTokens,
-        });
-        results.push({ platform: 'ios', ...iosResult });
-      } catch (error: unknown) {
-        console.error('Error sending iOS notifications:', error);
-        results.push({ platform: 'ios', error: error instanceof Error ? error.message : 'Unknown error' });
+      // Send to iOS tokens
+      if (iosTokens.length > 0) {
+        try {
+          const iosResult = await getMessaging().sendEachForMulticast({
+            ...message,
+            tokens: iosTokens,
+          });
+          results.push({ platform: 'ios', ...iosResult });
+        } catch (error: unknown) {
+          console.error('Error sending iOS notifications:', error);
+          results.push({ platform: 'ios', error: error instanceof Error ? error.message : 'Unknown error' });
+        }
       }
-    }
 
-    // Send to Android tokens
-    if (androidTokens.length > 0) {
-      try {
-        const androidResult = await getMessaging().sendEachForMulticast({
-          ...message,
-          tokens: androidTokens,
-        });
-        results.push({ platform: 'android', ...androidResult });
-      } catch (error: unknown) {
-        console.error('Error sending Android notifications:', error);
-        results.push({ platform: 'android', error: error instanceof Error ? error.message : 'Unknown error' });
+      // Send to Android tokens
+      if (androidTokens.length > 0) {
+        try {
+          const androidResult = await getMessaging().sendEachForMulticast({
+            ...message,
+            tokens: androidTokens,
+          });
+          results.push({ platform: 'android', ...androidResult });
+        } catch (error: unknown) {
+          console.error('Error sending Android notifications:', error);
+          results.push({ platform: 'android', error: error instanceof Error ? error.message : 'Unknown error' });
+        }
       }
     }
 

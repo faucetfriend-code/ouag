@@ -30,23 +30,9 @@ export default function CurrencySettingsPage() {
   const [decimalPlaces, setDecimalPlaces] = useState(2);
   const [isLoading, setIsLoading] = useState(false);
 
-  if (!user) {
-    return (
-      <div className="container mt-4">
-        <div className="text-center">
-          <h1 className="mb-3">Currency Settings</h1>
-          <p className="text-secondary mb-4">Please log in to access your currency settings.</p>
-          <Link href="/login" className="btn btn-primary">
-            <i className="bi bi-discord me-2"></i>
-            Login with Discord
-          </Link>
-        </div>
-      </div>
-    );
-  }
-
   // Load saved preferences when component mounts
   useEffect(() => {
+    if (!user) return; // Skip loading if no user
     const loadSettings = async () => {
       try {
         const response = await fetch('/api/user/currency');
@@ -80,7 +66,7 @@ export default function CurrencySettingsPage() {
     };
 
     loadSettings();
-  }, []);
+  }, [user]);
 
   const handleCurrencyChange = (currencyCode: string) => {
     setSelectedCurrency(currencyCode);
@@ -148,6 +134,22 @@ export default function CurrencySettingsPage() {
       return `${selectedCurrencyData.code} ${formattedAmount}`;
     }
   };
+
+  // Early return after all hooks
+  if (!user) {
+    return (
+      <div className="container mt-4">
+        <div className="text-center">
+          <h1 className="mb-3">Currency Settings</h1>
+          <p className="text-secondary mb-4">Please log in to access your currency settings.</p>
+          <Link href="/login" className="btn btn-primary">
+            <i className="bi bi-discord me-2"></i>
+            Login with Discord
+          </Link>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="container mt-4">
