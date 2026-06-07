@@ -144,13 +144,14 @@ When ready to sync data between environments:
 
 ---
 
-### 1.3 Stripe Payment Integration
-**Status:** ⚠️ PARTIAL (API routes exist, Stripe SDK missing)
-**Priority:** 🔴 CRITICAL (enables revenue)
-**Blockers:** Task 1.1 (PostgreSQL deployment)
-**Dependencies:** PostgreSQL/Supabase must be deployed first
-**Time:** 6-8 hours
-**Cost:** $0/month (2.9% + $0.30 per transaction only)
+### 1.3 Stripe Payment Integration (DE-PRIORITIZED)
+**Status:** ❌ DE-PRIORITIZED (Not required for Discord Members-Only MVP)
+**Priority:** ⚪ LOW / DE-PRIORITIZED (App is free for verified Discord server members; Future plan: Crypto Payments)
+**Blockers:** None (Feature shelved)
+**Dependencies:** None
+**Time:** N/A
+**Cost:** $0
+
 
 **Current State:**
 - ✅ UI complete (`app/settings/subscription/page.tsx`)

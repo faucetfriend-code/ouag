@@ -90,7 +90,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   const canAccessPremium = () => {
-    return user?.subscription?.active === true;
+    return user?.isServerMember === true;
   };
 
   const grantTestAccess = () => {

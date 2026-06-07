@@ -163,48 +163,52 @@ export default function ProfilePage() {
          <p className="text-secondary mb-0">Manage your account, portfolio, and trading preferences</p>
        </div>
 
-       {/* Subscription Status */}
+       {/* Discord Membership Status */}
        <div className="row mb-4">
          <div className="col-12">
-           <div className={`card ${user.subscription?.active ? 'border-success' : 'border-warning'}`}>
+           <div className={`card ${user.isServerMember ? 'border-success' : 'border-warning'}`}>
              <div className="card-body">
                <div className="d-flex justify-content-between align-items-center">
                  <div>
                    <h5 className="card-title mb-1">
-                     <i className={`bi ${user.subscription?.active ? 'bi-check-circle-fill text-success' : 'bi-exclamation-triangle-fill text-warning'} me-2`}></i>
-                     {user.subscription?.active ? 'Premium Subscription Active' : 'No Active Subscription'}
+                     <i className={`bi ${user.isServerMember ? 'bi-check-circle-fill text-success' : 'bi-exclamation-triangle-fill text-warning'} me-2`}></i>
+                     {user.isServerMember ? 'Premium Member Access Active' : 'Discord Membership Required'}
                    </h5>
-                   {user.subscription?.active && user.subscription.endDate && (
-                      <p className="text-secondary mb-0">
-                        Expires: {new Date(user.subscription.endDate).toLocaleDateString()}
-                      </p>
-                   )}
-                   {!user.subscription?.active && (
-                      <p className="text-secondary mb-0">
-                        Subscribe to access premium features and analyst insights.
-                      </p>
+                   <p className="text-secondary mb-0">
+                     {user.isServerMember
+                       ? 'Verified Member of the Unity Academy Discord Server. You have full access to all trading tools and analyst insights.'
+                       : 'Access to premium tools and analyst insights is restricted to Unity Academy Discord members.'}
+                   </p>
+                 </div>
+                 <div>
+                   {!user.isServerMember ? (
+                     <div className="d-flex gap-2">
+                       <button className="btn btn-success" onClick={grantTestAccess}>
+                         <i className="bi bi-unlock me-2"></i>
+                         Grant Test Access
+                       </button>
+                       <a
+                         href="https://discord.gg/unityacademy"
+                         target="_blank"
+                         rel="noopener noreferrer"
+                         className="btn btn-primary"
+                       >
+                         <i className="bi bi-discord me-2"></i>
+                         Join Discord Server
+                       </a>
+                     </div>
+                   ) : (
+                     <a
+                       href="https://discord.gg/unityacademy"
+                       target="_blank"
+                       rel="noopener noreferrer"
+                       className="btn btn-outline-primary"
+                     >
+                       <i className="bi bi-discord me-2"></i>
+                       Unity Academy Discord
+                     </a>
                    )}
                  </div>
-                  <div>
-                  {!user.subscription?.active && (
-                    <div className="d-flex gap-2">
-                      <button className="btn btn-primary" onClick={grantTestAccess}>
-                        <i className="bi bi-star me-2"></i>
-                        Grant Test Access
-                      </button>
-                      <Link href="/settings/subscription" className="btn btn-outline-primary">
-                        <i className="bi bi-credit-card me-2"></i>
-                        Subscribe Now
-                      </Link>
-                    </div>
-                  )}
-                  {user.subscription?.active && (
-                    <Link href="/settings/subscription" className="btn btn-outline-primary">
-                      <i className="bi bi-gear me-2"></i>
-                      Manage Subscription
-                    </Link>
-                  )}
-                  </div>
                </div>
              </div>
            </div>

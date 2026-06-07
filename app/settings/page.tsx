@@ -41,15 +41,7 @@ export default function SettingsPage() {
         { href: '/settings/trading', label: 'Trading Preferences', icon: 'bi-graph-up', description: 'Risk tolerance and trading settings' },
       ]
     },
-    {
-      title: 'Billing & Subscription',
-      description: 'Manage your subscription and billing information',
-      icon: 'bi-credit-card',
-      items: [
-        { href: '/settings/subscription', label: 'Subscription Management', icon: 'bi-star', description: 'View and manage your subscription plan' },
-        { href: '/settings/billing', label: 'Billing & Payments', icon: 'bi-receipt', description: 'Payment methods and billing history' },
-      ]
-    },
+
     {
       title: 'Data & Privacy',
       description: 'Manage your data and privacy settings',
