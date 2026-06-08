@@ -1,20 +1,34 @@
 :root {
-  --bg: oklch(0.02 0.005 280);
-  --surface: oklch(0.10 0.015 280);
-  --surface-hover: oklch(0.14 0.02 280);
-  --fg: oklch(0.92 0.005 280);
-  --fg-2: oklch(0.72 0.01 280);
-  --muted: oklch(0.55 0.02 280);
-  --border: oklch(0.25 0.01 280 / 0.5);
-  --border-glass: rgba(255, 255, 255, 0.08);
-  --accent: oklch(0.62 0.22 42);
-  --accent-hover: oklch(0.67 0.22 42);
-  --accent-glow: 0 0 20px oklch(0.62 0.22 42 / 0.4);
-  --positive: oklch(0.78 0.16 85);
-  --positive-glow: 0 0 16px oklch(0.78 0.16 85 / 0.35);
-  --negative: oklch(0.50 0.22 25);
-  --negative-glow: 0 0 16px oklch(0.50 0.22 25 / 0.35);
-  --font-display: 'Cabinet Grotesk', 'Outfit', 'Segoe UI', sans-serif;
+  /* Surfaces — warm near-black scale, matched to dashboard.unityacademy.io */
+  --surface-0: #050505;
+  --surface-1: #0a0908;
+  --surface-2: #0c0a09;
+  --surface-3: #141211;
+  --bg: var(--surface-0);
+  --surface: var(--surface-2);
+  --surface-hover: var(--surface-3);
+  --fg: #ffffff;
+  --fg-2: rgba(255, 255, 255, 0.5);
+  --muted: #9ca3af;
+  --border: rgba(255, 255, 255, 0.06);
+  --border-glass: rgba(255, 255, 255, 0.05);
+  /* Brand + semantics — exact live values */
+  --brand-orange: #fe6700;
+  --brand-green: #22c55e;
+  --brand-red: #ef4444;
+  --accent: var(--brand-orange);
+  --accent-hover: #ff7d24;
+  --accent-glow: none;            /* real site has no glow — flat */
+  --accent-wash: rgba(254, 103, 0, 0.10);
+  --accent-hair: rgba(254, 103, 0, 0.12);
+  --card-bg: rgba(12, 10, 9, 0.80);
+  --positive: var(--brand-green);
+  --positive-glow: none;
+  --negative: var(--brand-red);
+  --negative-glow: none;
+  --violet: #8b5cf6;
+  --amber: #f59e0b;
+  --font-display: 'Outfit', 'Segoe UI', sans-serif;
   --font-body: 'Outfit', 'Inter', 'Segoe UI', sans-serif;
   --font-mono: 'JetBrains Mono', 'IBM Plex Mono', ui-monospace, monospace;
   --text-xs: 0.75rem;
@@ -34,8 +48,8 @@
   --space-10: 40px;
   --space-12: 48px;
   --radius-sm: 8px;
-  --radius-md: 16px;
-  --radius-lg: 24px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
   --radius-pill: 9999px;
   --motion-fast: 150ms;
   --motion-base: 250ms;
@@ -58,20 +72,16 @@ img { max-width: 100%; display: block; }
 button { cursor: pointer; font-family: inherit; }
 input, select, textarea { font-family: inherit; }
 
-.bg-gradient { background: linear-gradient(135deg, #060608 0%, #121216 50%, #0a0a0e 100%); }
+.bg-gradient { background: var(--surface-0); }
 
 .glass {
-  background: linear-gradient(145deg, rgba(30, 30, 35, 0.4) 0%, rgba(15, 15, 20, 0.6) 100%);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
-  border: 1px solid var(--border-glass);
+  background: var(--card-bg);
+  border: 1px solid var(--accent-hair);
   border-radius: var(--radius-md);
 }
 .glass-sm {
-  background: linear-gradient(145deg, rgba(30, 30, 35, 0.3) 0%, rgba(15, 15, 20, 0.5) 100%);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  border: 1px solid var(--border-glass);
+  background: var(--card-bg);
+  border: 1px solid var(--accent-hair);
   border-radius: var(--radius-sm);
 }
 
