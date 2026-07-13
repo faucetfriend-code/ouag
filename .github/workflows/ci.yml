@@ -1,0 +1,30 @@
+name: CI
+
+# Lint + build gate (repo has no tests yet). Triggerable via `gh workflow run ci.yml`.
+# factory/** push trigger supports the worker's branch-gated main promotion.
+on:
+  workflow_dispatch:
+  push:
+    branches: [main, "factory/**"]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    env:
+      # prisma generate / next build need a DATABASE_URL set; no DB is contacted.
+      DATABASE_URL: "postgresql://user:pass@localhost:5432/db?schema=public"
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Install
+        run: npm ci
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Build
+        run: npm run build
