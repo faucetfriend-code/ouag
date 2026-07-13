@@ -21,7 +21,7 @@ export function useAsync<T extends (...args: unknown[]) => Promise<unknown>>(
       try {
         startLoading(loadingMessage);
         const result = await asyncFn(...args);
-        return result;
+        return result as Awaited<ReturnType<T>>;
       } catch (error) {
         console.error('Async operation failed:', error);
         throw error; // Re-throw so calling code can handle it
