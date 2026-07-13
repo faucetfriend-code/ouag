@@ -10,14 +10,14 @@ import { useLoading } from './loading-context';
  * @param loadingMessage - Optional loading message to display
  * @returns A function that executes the async operation with loading state management
  */
-export function useAsync<T extends (...args: any[]) => Promise<any>>(
+export function useAsync<T extends (...args: unknown[]) => Promise<unknown>>(
   asyncFn: T,
   loadingMessage = 'Loading...'
 ) {
   const { startLoading, stopLoading } = useLoading();
 
   const execute = useCallback(
-    async (...args: Parameters<T>): Promise<ReturnType<T> | null> => {
+    async (...args: Parameters<T>): Promise<Awaited<ReturnType<T>> | null> => {
       try {
         startLoading(loadingMessage);
         const result = await asyncFn(...args);

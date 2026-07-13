@@ -145,7 +145,7 @@ export default function ProfileSettingsPage() {
                     maxLength={50}
                   />
                   <div className="form-text">
-                    This is how you'll appear to other users. Leave blank to use your Discord username.
+                    This is how you&apos;ll appear to other users. Leave blank to use your Discord username.
                   </div>
                 </div>
 

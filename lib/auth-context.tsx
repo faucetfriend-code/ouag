@@ -43,6 +43,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     if (enableTestUser && !session) {
       // Set a test user for development/demo purposes
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- dev/demo test-user fallback synced from env/localStorage + session
       setUser({
         id: 'test-user-123',
         discordId: 'test-discord-id',
@@ -61,14 +62,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     } else if (session?.user) {
       setUser({
         id: session.user.id,
-        discordId: (session.user as any).discordId,
-        username: (session.user as any).username,
-        discriminator: (session.user as any).discriminator,
-        avatar: (session.user as any).avatar,
+        discordId: session.user.discordId,
+        username: session.user.username,
+        discriminator: session.user.discriminator,
+        avatar: session.user.avatar,
         email: session.user.email,
-        name: (session.user as any).name || (session.user as any).username,
-        isServerMember: (session.user as any).isServerMember,
-        subscription: (session.user as any).subscription,
+        name: session.user.username,
+        isServerMember: session.user.isServerMember,
+        subscription: session.user.subscription,
       });
     } else {
       setUser(null);

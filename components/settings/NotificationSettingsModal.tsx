@@ -89,7 +89,7 @@ export default function NotificationSettingsModal({ show, onHide }: Notification
     }
   };
 
-  const handleSettingChange = (key: keyof NotificationSettings, value: any) => {
+  const handleSettingChange = <K extends keyof NotificationSettings>(key: K, value: NotificationSettings[K]) => {
     const newSettings = { ...settings, [key]: value };
     setSettings(newSettings);
 
@@ -97,7 +97,7 @@ export default function NotificationSettingsModal({ show, onHide }: Notification
     updateNotificationSetting(key, value);
   };
 
-  const updateNotificationSetting = async (key: keyof NotificationSettings, value: any) => {
+  const updateNotificationSetting = async <K extends keyof NotificationSettings>(key: K, value: NotificationSettings[K]) => {
     try {
       // INSERTAPIHERE: Update individual notification setting
       const response = await fetch('/api/notifications/settings', {

@@ -20,6 +20,10 @@ interface Post {
   analysis?: string;
 }
 
+interface RawPost extends Omit<Post, 'timestamp'> {
+  timestamp: string;
+}
+
 export default function RecentActivityFeed() {
   const { preferences } = useUserPreferences();
   const [posts, setPosts] = useState<Post[]>([]);
@@ -44,7 +48,7 @@ export default function RecentActivityFeed() {
         const data = await response.json();
 
         // Convert timestamp strings back to Date objects
-        const postsWithDates = data.posts.map((post: any) => ({
+        const postsWithDates = data.posts.map((post: RawPost) => ({
           ...post,
           timestamp: new Date(post.timestamp)
         }));

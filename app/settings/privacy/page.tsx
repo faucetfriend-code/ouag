@@ -186,7 +186,7 @@ export default function PrivacySettingsPage() {
             </div>
             <div className="card-body">
               <p className="text-secondary mb-4">
-                Choose what types of communications you'd like to receive.
+                Choose what types of communications you&apos;d like to receive.
               </p>
 
               <div className="mb-3">

@@ -1,15 +1,18 @@
-import { PushNotifications } from '@capacitor/push-notifications';
+import { PushNotifications, ActionPerformed, PushNotificationSchema } from '@capacitor/push-notifications';
 import { Capacitor } from '@capacitor/core';
+import type { MessagePayload } from 'firebase/messaging';
 import { messaging, requestNotificationPermission, onMessageListener } from './firebase';
 
 export interface PushNotificationData {
   id: string;
   title: string;
   body: string;
-  data?: Record<string, any>;
+  data?: Record<string, unknown>;
   type: 'price_alert' | 'portfolio_update' | 'news' | 'system';
   priority: 'low' | 'normal' | 'high';
 }
+
+type IncomingNotification = MessagePayload | PushNotificationSchema;
 
 export interface NotificationToken {
   token: string;
@@ -53,7 +56,7 @@ class PushNotificationService {
       }
 
       // Listen for foreground messages
-      onMessageListener().then((payload: any) => {
+      onMessageListener().then((payload: MessagePayload) => {
         console.log('Foreground message received:', payload);
         this.handleNotification(payload);
       });
@@ -118,15 +121,18 @@ class PushNotificationService {
     }
   }
 
-  private handleNotification(notification: any): void {
+  private handleNotification(notification: IncomingNotification): void {
     // Create a toast notification or update UI
+    const data = notification.data as Record<string, string> | undefined;
+    const title = 'title' in notification ? notification.title : undefined;
+    const body = 'body' in notification ? notification.body : undefined;
     const notificationData: PushNotificationData = {
-      id: notification.data?.id || Date.now().toString(),
-      title: notification.title || notification.notification?.title || 'Unity Oracle Alert',
-      body: notification.body || notification.notification?.body || 'New update available',
-      data: notification.data,
-      type: notification.data?.type || 'system',
-      priority: notification.data?.priority || 'normal',
+      id: data?.id || Date.now().toString(),
+      title: title || notification.notification?.title || 'Unity Oracle Alert',
+      body: body || notification.notification?.body || 'New update available',
+      data,
+      type: (data?.type as PushNotificationData['type']) || 'system',
+      priority: (data?.priority as PushNotificationData['priority']) || 'normal',
     };
 
     // Emit custom event for UI components to listen
@@ -142,14 +148,15 @@ class PushNotificationService {
     }
   }
 
-  private handleNotificationAction(action: any): void {
+  private handleNotificationAction(action: ActionPerformed): void {
     const { actionId, notification } = action;
+    const data = notification.data as Record<string, string> | undefined;
 
     switch (actionId) {
       case 'view':
         // Navigate to relevant page
-        if (notification.data?.url) {
-          window.location.href = notification.data.url;
+        if (data?.url) {
+          window.location.href = data.url;
         } else {
           window.location.href = '/tools/oracle-alerts';
         }

@@ -91,7 +91,21 @@ export async function PATCH(request: NextRequest) {
   }
 }
 
-async function updateProfile(userId: string, updates: any) {
+interface UpdateProfileUpdates {
+  name?: string;
+  email?: string;
+}
+
+interface ChangePasswordUpdates {
+  currentPassword?: string;
+  newPassword?: string;
+}
+
+interface ToggleTwoFactorUpdates {
+  enabled?: boolean;
+}
+
+async function updateProfile(userId: string, updates: UpdateProfileUpdates) {
   try {
     const { name, email } = updates;
 
@@ -119,15 +133,15 @@ async function updateProfile(userId: string, updates: any) {
       user: updatedUser,
       message: 'Profile updated successfully'
     }, { status: 200 });
-  } catch (error: any) {
-    if (error.code === 'P2002') {
+  } catch (error: unknown) {
+    if (error && typeof error === 'object' && 'code' in error && (error as { code: string }).code === 'P2002') {
       return NextResponse.json({ error: 'Email already in use' }, { status: 409 });
     }
     throw error;
   }
 }
 
-async function changePassword(userId: string, updates: any) {
+async function changePassword(userId: string, updates: ChangePasswordUpdates) {
   try {
     const { currentPassword, newPassword } = updates;
 
@@ -160,7 +174,7 @@ async function changePassword(userId: string, updates: any) {
   }
 }
 
-async function toggleTwoFactor(userId: string, updates: any) {
+async function toggleTwoFactor(userId: string, updates: ToggleTwoFactorUpdates) {
   try {
     const { enabled } = updates;
 

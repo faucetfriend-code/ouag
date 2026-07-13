@@ -5,6 +5,7 @@
  * Run this script to initialize the database for the Unity Oracle Aggregator.
  */
 
+/* eslint-disable @typescript-eslint/no-require-imports */
 const { redisService } = require('../lib/redis');
 
 async function initializeDatabase() {

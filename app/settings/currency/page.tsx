@@ -371,7 +371,7 @@ export default function CurrencySettingsPage() {
               <div className="mb-3">
                 <h6><i className="bi bi-star text-warning me-2"></i>Choose Familiar</h6>
                 <p className="small text-secondary mb-3">
-                  Select a currency you're familiar with for easier mental calculations.
+                  Select a currency you&apos;re familiar with for easier mental calculations.
                 </p>
               </div>
               <div className="mb-3">

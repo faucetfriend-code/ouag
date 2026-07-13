@@ -68,6 +68,7 @@ export default async function AnalystProfilePage({ params }: AnalystProfilePageP
   const followerCount = await getAnalystFollowerCount(username);
 
   // Calculate current time once for the entire render (server component)
+  // eslint-disable-next-line react-hooks/purity -- async Server Component; timestamp computed once per request render, not client re-render
   const now = Date.now();
 
   // Format time ago

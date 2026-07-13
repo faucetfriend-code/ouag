@@ -37,6 +37,7 @@ export default function DataSourceToggle() {
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- intentional mount-detection flag, not derived state sync
     setMounted(true);
   }, []);
 

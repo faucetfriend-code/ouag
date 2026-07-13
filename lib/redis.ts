@@ -17,6 +17,7 @@ import { createClient, RedisClientType } from 'redis';
 import { Redis as UpstashRedis } from '@upstash/redis';
 import { mockTradingPosts } from '../data/mockData';
 import { ProcessedPost } from './workflow';
+import { AnalysisResult } from './aiService';
 
 type RedisMode = 'tcp' | 'rest';
 
@@ -147,7 +148,7 @@ class RedisService {
    * UPDATE POST ANALYSIS
    * Updates the AI analysis for an existing post (for external summary processing)
    */
-  async updatePostAnalysis(postId: string, analysis: any): Promise<void> {
+  async updatePostAnalysis(postId: string, analysis: Partial<AnalysisResult> & { summary: string }): Promise<void> {
     await this.connect();
 
     const key = `post:${postId}`;

@@ -1,5 +1,5 @@
 import { initializeApp } from 'firebase/app';
-import { getMessaging, getToken, onMessage } from 'firebase/messaging';
+import { getMessaging, getToken, onMessage, MessagePayload } from 'firebase/messaging';
 
 const firebaseConfig = {
   apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
@@ -32,7 +32,7 @@ export const requestNotificationPermission = async (): Promise<string | null> =>
   }
 };
 
-export const onMessageListener = () =>
+export const onMessageListener = (): Promise<MessagePayload> =>
   new Promise((resolve) => {
     onMessage(messaging, (payload) => {
       resolve(payload);

@@ -12,7 +12,7 @@ interface Notification {
   priority: 'low' | 'normal' | 'high';
   read: boolean;
   sentAt: string;
-  data?: Record<string, any>;
+  data?: Record<string, unknown>;
 }
 
 interface NotificationCenterProps {
@@ -205,7 +205,7 @@ export default function NotificationCenter({ isOpen, onClose }: NotificationCent
             <div className="p-8 text-center text-gray-500">
               <Bell className="h-12 w-12 mx-auto mb-4 opacity-50" />
               <p>No notifications yet</p>
-              <p className="text-sm">We'll notify you about important updates</p>
+              <p className="text-sm">We&apos;ll notify you about important updates</p>
             </div>
           ) : (
             <div className="divide-y">

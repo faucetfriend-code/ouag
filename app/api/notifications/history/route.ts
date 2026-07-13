@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { Prisma } from '@prisma/client';
 import { auth } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
 
@@ -15,7 +16,7 @@ export async function GET(request: NextRequest) {
     const type = searchParams.get('type');
     const unreadOnly = searchParams.get('unreadOnly') === 'true';
 
-    const where: any = {
+    const where: Prisma.NotificationWhereInput = {
       userId: session.user.id,
     };
 
@@ -71,7 +72,7 @@ export async function PATCH(request: NextRequest) {
     }
 
     // Update notifications as read/unread
-    const updateData: any = {};
+    const updateData: Prisma.NotificationUpdateInput = {};
     if (read !== undefined) {
       updateData.read = read;
       if (read) {

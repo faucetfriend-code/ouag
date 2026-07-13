@@ -8,6 +8,31 @@
 import { NextApiRequest, NextApiResponse } from 'next';
 import { analystWorkflow, WebhookPayload } from '../../../lib/workflow';
 
+interface DiscordWebhookBody {
+  author?: { id: string; username: string; discriminator?: string };
+  content?: string;
+  timestamp: string;
+  channel_id?: string;
+  id: string;
+}
+
+interface TwitterWebhookBody {
+  author?: { id: string; username: string };
+  text?: string;
+  created_at: string;
+  id: string;
+}
+
+interface ManualWebhookBody {
+  analyst_id?: string;
+  analyst_name?: string;
+  content?: string;
+  token?: string;
+  timestamp?: string;
+  channel?: string;
+  id?: string;
+}
+
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method not allowed' });
@@ -84,17 +109,17 @@ async function validateWebhook(req: NextApiRequest, platform: string): Promise<b
  * PARSE WEBHOOK PAYLOAD
  * Convert platform-specific payload to standardized format
  */
-function parseWebhookPayload(body: any, platform: string): WebhookPayload | null {
+function parseWebhookPayload(body: unknown, platform: string): WebhookPayload | null {
   try {
     switch (platform.toLowerCase()) {
       case 'discord':
-        return parseDiscordPayload(body);
+        return parseDiscordPayload(body as DiscordWebhookBody);
 
       case 'twitter':
-        return parseTwitterPayload(body);
+        return parseTwitterPayload(body as TwitterWebhookBody);
 
       case 'manual':
-        return parseManualPayload(body);
+        return parseManualPayload(body as ManualWebhookBody);
 
       default:
         console.warn(`Unknown platform: ${platform}`);
@@ -109,7 +134,7 @@ function parseWebhookPayload(body: any, platform: string): WebhookPayload | null
 /**
  * PARSE DISCORD WEBHOOK PAYLOAD
  */
-function parseDiscordPayload(body: any): WebhookPayload | null {
+function parseDiscordPayload(body: DiscordWebhookBody): WebhookPayload | null {
   if (!body || !body.author || !body.content) {
     return null;
   }
@@ -131,7 +156,7 @@ function parseDiscordPayload(body: any): WebhookPayload | null {
 /**
  * PARSE TWITTER WEBHOOK PAYLOAD
  */
-function parseTwitterPayload(body: any): WebhookPayload | null {
+function parseTwitterPayload(body: TwitterWebhookBody): WebhookPayload | null {
   if (!body || !body.author || !body.text) {
     return null;
   }
@@ -151,7 +176,7 @@ function parseTwitterPayload(body: any): WebhookPayload | null {
 /**
  * PARSE MANUAL SUBMISSION PAYLOAD
  */
-function parseManualPayload(body: any): WebhookPayload | null {
+function parseManualPayload(body: ManualWebhookBody): WebhookPayload | null {
   if (!body || !body.analyst_id || !body.content || !body.token) {
     return null;
   }

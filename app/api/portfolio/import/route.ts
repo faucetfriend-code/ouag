@@ -177,7 +177,7 @@ function parseCSV(csvContent: string): { holdings: ImportHolding[]; errors: stri
 /**
  * Validate holdings array
  */
-function validateHoldings(holdings: any[]): string[] {
+function validateHoldings(holdings: unknown): string[] {
   const errors: string[] = [];
 
   if (!Array.isArray(holdings)) {
@@ -185,7 +185,7 @@ function validateHoldings(holdings: any[]): string[] {
     return errors;
   }
 
-  holdings.forEach((holding, index) => {
+  (holdings as Partial<ImportHolding>[]).forEach((holding, index) => {
     if (!holding.token || typeof holding.amount !== 'number' || typeof holding.avgPrice !== 'number') {
       errors.push(`Holding ${index + 1}: must have token (string), amount (number), and avgPrice (number)`);
     } else if (holding.amount <= 0 || holding.avgPrice <= 0) {

@@ -541,7 +541,7 @@ export default function ProfilePage() {
               {!preferences || preferences.favoriteAnalysts.length === 0 ? (
                 <div className="text-center text-secondary py-4">
                   <i className="bi bi-heart display-4 mb-3 d-block"></i>
-                  <p className="mb-0">You're not following any analysts yet.</p>
+                  <p className="mb-0">You&apos;re not following any analysts yet.</p>
                   <small>Visit the <Link href="/analysts" className="text-primary">Analysts page</Link> to discover and follow analysts.</small>
                 </div>
               ) : (

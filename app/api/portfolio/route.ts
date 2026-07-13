@@ -18,6 +18,11 @@ const COINGECKO_API_KEY = process.env.COINGECKO_API_KEY;
 const priceCache = new Map<string, { price: number; lastUpdated: number }>();
 const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
 
+interface CoinGeckoPriceData {
+  usd?: number;
+  usd_24h_change?: number;
+}
+
 interface PortfolioHolding {
   id: string;
   token: string;
@@ -235,7 +240,7 @@ async function getTokenPrices(tokenSymbols: string[]): Promise<Record<string, { 
     const data = await response.json();
 
     // Map back to symbols and cache
-    for (const [coinId, priceData] of Object.entries(data) as [string, any][]) {
+    for (const [coinId, priceData] of Object.entries(data) as [string, CoinGeckoPriceData][]) {
       const symbol = Object.keys(SYMBOL_TO_COINGECKO_ID).find(key => SYMBOL_TO_COINGECKO_ID[key] === coinId) || coinId;
 
       if (priceData.usd) {

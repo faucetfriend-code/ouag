@@ -22,7 +22,7 @@ interface Session {
   device: string;
   location: string;
   lastActive: string;
-  current?: boolean;
+  isCurrent?: boolean;
 }
 
 export default function SecuritySettingsModal({ show, onHide }: SecuritySettingsModalProps) {
@@ -213,7 +213,7 @@ export default function SecuritySettingsModal({ show, onHide }: SecuritySettings
     */
   };
 
-  const handleSettingChange = async (key: keyof SecuritySettings, value: any) => {
+  const handleSettingChange = async <K extends keyof SecuritySettings>(key: K, value: SecuritySettings[K]) => {
     const newSettings = { ...settings, [key]: value };
     setSettings(newSettings);
 
@@ -460,7 +460,7 @@ export default function SecuritySettingsModal({ show, onHide }: SecuritySettings
                 </div>
                 <div className="list-group list-group-flush">
                   {activeSessions.length > 0 ? (
-                    activeSessions.map((session: any) => (
+                    activeSessions.map((session: Session) => (
                       <div key={session.id} className="list-group-item px-0 d-flex justify-content-between align-items-center">
                         <div>
                           <div className="d-flex align-items-center">

@@ -13,6 +13,11 @@ import { SYMBOL_TO_COINGECKO_ID } from '@/lib/coingecko-mappings';
 const COINGECKO_API_BASE = 'https://api.coingecko.com/api/v3';
 const COINGECKO_API_KEY = process.env.COINGECKO_API_KEY;
 
+interface CoinGeckoPriceData {
+  usd?: number;
+  usd_24h_change?: number;
+}
+
 /**
  * POST /api/portfolio/refresh
  * Refresh portfolio prices and recalculate values
@@ -154,7 +159,7 @@ async function getTokenPrices(tokenSymbols: string[]): Promise<Record<string, { 
     const data = await response.json();
 
     // Map back to symbols
-    for (const [coinId, priceData] of Object.entries(data) as [string, any][]) {
+    for (const [coinId, priceData] of Object.entries(data) as [string, CoinGeckoPriceData][]) {
       const symbol = Object.keys(SYMBOL_TO_COINGECKO_ID).find((key: string) => SYMBOL_TO_COINGECKO_ID[key] === coinId) || coinId.toLowerCase();
 
       if (priceData.usd) {

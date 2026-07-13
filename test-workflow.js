@@ -4,6 +4,7 @@
  * Demonstrates the webhook processing workflow with sample data.
  */
 
+/* eslint-disable @typescript-eslint/no-require-imports */
 const { analystWorkflow } = require('./lib/workflow.ts');
 
 // Sample webhook payloads for testing
@@ -73,5 +74,4 @@ async function testWorkflow() {
 }
 
 // Run the test
-testWorkflow().catch(console.error);</content>
-</xai:function_call">test-workflow.js
+testWorkflow().catch(console.error);

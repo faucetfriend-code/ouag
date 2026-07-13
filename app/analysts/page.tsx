@@ -59,6 +59,7 @@ export default async function AnalystsDirectoryPage() {
   const analysts = await getAllAnalysts();
 
   // Calculate current time for "time ago" formatting
+  // eslint-disable-next-line react-hooks/purity -- async Server Component; timestamp computed once per request render, not client re-render
   const now = Date.now();
 
   const formatTimeAgo = (date: Date) => {

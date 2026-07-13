@@ -18,6 +18,7 @@ export default function DevTools() {
   useEffect(() => {
     const enabled = localStorage.getItem('enable_test_user') === 'true' ||
                     process.env.NEXT_PUBLIC_ENABLE_TEST_USER === 'true';
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- dev-only test-user toggle synced from localStorage/env on mount
     setIsTestUserEnabled(enabled);
   }, []);
 

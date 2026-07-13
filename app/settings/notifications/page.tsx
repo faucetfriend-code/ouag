@@ -248,7 +248,7 @@ export default function NotificationSettingsPage() {
             </div>
             <div className="card-body">
               <p className="text-secondary mb-4">
-                Set quiet hours when you don't want to receive notifications.
+                Set quiet hours when you don&apos;t want to receive notifications.
               </p>
 
               <div className="row">

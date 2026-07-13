@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { Prisma } from '@prisma/client';
 import { auth } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
 import { getMessaging } from 'firebase-admin/messaging';
@@ -41,7 +42,15 @@ interface SendNotificationRequest {
   body: string;
   type: 'price_alert' | 'portfolio_update' | 'news' | 'system';
   priority?: 'low' | 'normal' | 'high';
-  data?: Record<string, any>;
+  data?: Record<string, unknown>;
+}
+
+interface NotificationSendResult {
+  platform: 'web' | 'ios' | 'android';
+  error?: string;
+  successCount?: number;
+  failureCount?: number;
+  responses?: unknown[];
 }
 
 export async function POST(request: NextRequest) {
@@ -131,7 +140,7 @@ export async function POST(request: NextRequest) {
       },
     };
 
-    const results = [];
+    const results: NotificationSendResult[] = [];
 
     // Check if Firebase is configured
     const firebaseApp = getFirebaseAdmin();
@@ -189,7 +198,7 @@ export async function POST(request: NextRequest) {
       body,
       type,
       priority,
-      data,
+      data: data as Prisma.InputJsonValue | undefined,
     }));
 
     await prisma.notification.createMany({
@@ -199,8 +208,8 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({
       success: true,
       results,
-      totalSent: results.reduce((sum: number, r: any) => sum + ('successCount' in r ? r.successCount : 0), 0),
-      totalFailed: results.reduce((sum: number, r: any) => sum + ('failureCount' in r ? r.failureCount : 0), 0),
+      totalSent: results.reduce((sum: number, r: NotificationSendResult) => sum + (r.successCount ?? 0), 0),
+      totalFailed: results.reduce((sum: number, r: NotificationSendResult) => sum + (r.failureCount ?? 0), 0),
     });
   } catch (error) {
     console.error('Error sending notifications:', error);

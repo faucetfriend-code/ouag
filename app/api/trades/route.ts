@@ -6,6 +6,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
+import { Prisma } from '@prisma/client';
 import { auth } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
 
@@ -140,7 +141,7 @@ export async function GET(request: NextRequest) {
     const limit = parseInt(searchParams.get('limit') || '50');
     const offset = parseInt(searchParams.get('offset') || '0');
 
-    const where: any = { userId: session.user.id };
+    const where: Prisma.TradeWhereInput = { userId: session.user.id };
 
     if (token) where.token = token;
     if (side) where.side = side;
