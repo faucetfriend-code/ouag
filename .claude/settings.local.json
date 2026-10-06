@@ -1,7 +1,7 @@
 {
   "permissions": {
     "allow": [
-      "Bash(git -C \"C:\\Users\\z_shi\\Desktop\\N8NPROJECTS\\unity-oracle-aggregator\" log --oneline --all)",
+      "Bash(git -C \"G:\\ai-workspace\\unity-oracle-aggregator\" log --oneline --all)",
       "WebSearch",
       "Bash(npm run lint:*)",
       "Bash(npm run dev:local:*)",

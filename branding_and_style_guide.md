@@ -69,7 +69,7 @@ graph TD
     A -->|Swipe Left/Right| D(Slide-to-reveal Action Trigger)
 ```
 
-1.  **Haptic Feedback:** Native mobile wrapper triggers vibration events on tap (`lightImpact()` from [haptics.ts](file:///c:/Users/z_shi/Desktop/N8NPROJECTS/unity-oracle-aggregator/lib/haptics.ts)).
+1.  **Haptic Feedback:** Native mobile wrapper triggers vibration events on tap (`lightImpact()` from [haptics.ts](file:///G:/ai-workspace/unity-oracle-aggregator/lib/haptics.ts)).
 2.  **Edge Swipe Navigation:** Dragging from the left edge of the screen pulls out the mobile navigation tray using `@use-gesture/react` triggers.
 3.  **Metrics Pulsing:** Glow rings pulsate on active data triggers (e.g., `.pulse-orange` for live notifications, `.pulse-green` for market updates).
 4.  **Button Shine:** A smooth white gradient swipe executes horizontally across active buttons on hover states.
@@ -82,12 +82,12 @@ When building new layout markup, you **MUST** ensure the following backend bindi
 
 | Component / Page | Required Elements to Bind | Backend File Reference |
 | :--- | :--- | :--- |
-| **Navbar & Header** | Bell notification trigger button, unread counts (`unreadNotificationCount`), dynamic profile links. | [Navigation.tsx](file:///c:/Users/z_shi/Desktop/N8NPROJECTS/unity-oracle-aggregator/components/Navigation.tsx) |
-| **Home Screen** | Data source toggle button matching cookie/state. | [page.tsx](file:///c:/Users/z_shi/Desktop/N8NPROJECTS/unity-oracle-aggregator/app/page.tsx) |
-| **Profile Screen** | Discord server membership card (binds to `user.isServerMember`), followed analysts state, portfolio holdings mapping. | [page.tsx](file:///c:/Users/z_shi/Desktop/N8NPROJECTS/unity-oracle-aggregator/app/profile/page.tsx) |
-| **Settings Directory** | Context-bound toggles for notifications, currency selection dropdown, profile file uploads. | [page.tsx](file:///c:/Users/z_shi/Desktop/N8NPROJECTS/unity-oracle-aggregator/app/settings/page.tsx) |
-| **Watchlist Tool** | Input submission mapping to `addToWatchlist()` and deletions mapped to `removeFromWatchlist()`. | [page.tsx](file:///c:/Users/z_shi/Desktop/N8NPROJECTS/unity-oracle-aggregator/app/tools/watchlist/page.tsx) |
-| **Positions Tracker** | Leverage math triggers (spot vs perp margin, margin values, entry price, unrealized PnL calculator). | [PositionTracker.tsx](file:///c:/Users/z_shi/Desktop/N8NPROJECTS/unity-oracle-aggregator/components/PositionTracker.tsx) |
+| **Navbar & Header** | Bell notification trigger button, unread counts (`unreadNotificationCount`), dynamic profile links. | [Navigation.tsx](file:///G:/ai-workspace/unity-oracle-aggregator/components/Navigation.tsx) |
+| **Home Screen** | Data source toggle button matching cookie/state. | [page.tsx](file:///G:/ai-workspace/unity-oracle-aggregator/app/page.tsx) |
+| **Profile Screen** | Discord server membership card (binds to `user.isServerMember`), followed analysts state, portfolio holdings mapping. | [page.tsx](file:///G:/ai-workspace/unity-oracle-aggregator/app/profile/page.tsx) |
+| **Settings Directory** | Context-bound toggles for notifications, currency selection dropdown, profile file uploads. | [page.tsx](file:///G:/ai-workspace/unity-oracle-aggregator/app/settings/page.tsx) |
+| **Watchlist Tool** | Input submission mapping to `addToWatchlist()` and deletions mapped to `removeFromWatchlist()`. | [page.tsx](file:///G:/ai-workspace/unity-oracle-aggregator/app/tools/watchlist/page.tsx) |
+| **Positions Tracker** | Leverage math triggers (spot vs perp margin, margin values, entry price, unrealized PnL calculator). | [PositionTracker.tsx](file:///G:/ai-workspace/unity-oracle-aggregator/components/PositionTracker.tsx) |
 
 ---
 
